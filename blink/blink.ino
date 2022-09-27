@@ -18,7 +18,7 @@ int iter =0;
 
 void setup(){
   Serial.begin(9600); // Initialize serial connection to display distance readings
-    pinMode(7, OUTPUT);
+  pinMode(7, OUTPUT);
   Serial.println("Test");
   lidarLite.begin(0, true); // Set configuration to default and I2C to 400 kHz
   lidarLite.configure(0); // Change this number to try out alternate configurations
