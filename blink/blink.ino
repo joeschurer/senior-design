@@ -17,16 +17,20 @@ int cal_cnt = 0;
 int iter =0;
 
 void setup(){
-  Serial.begin(9600); // Initialize serial connection to display distance readings
+  //Serial.begin(9600); // Initialize serial connection to display distance readings
   pinMode(7, OUTPUT);
+  pinMode(8, OUTPUT);
+  /*
   Serial.println("Test");
   lidarLite.begin(0, true); // Set configuration to default and I2C to 400 kHz
   lidarLite.configure(0); // Change this number to try out alternate configurations
+  */
 
 }
 
 void loop()
 {
+  /*
   int dist;
 
   // At the beginning of every 100 readings,
@@ -50,6 +54,12 @@ void loop()
   }else{
     digitalWrite(7,LOW);
   }
+  */
+  digitalWrite(7,HIGH);
+  digitalWrite(8,HIGH);
+  delay(1000);
+  digitalWrite(7,LOW);
+  delay(1000);
   
   
 }
