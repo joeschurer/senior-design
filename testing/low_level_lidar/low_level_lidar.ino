@@ -1,26 +1,7 @@
 
-/*------------------------------------------------------------------------------
-  LIDARLite Arduino Library
-  v3HP/v3HP_I2C
-  This example shows methods for running the LIDAR-Lite v3 HP in various
-  modes of operation. To exercise the examples open a serial terminal
-  program (or the Serial Monitor in the Arduino IDE) and send ASCII
-  characters to trigger the commands. See "loop" function for details.
-  Connections:
-  LIDAR-Lite 5 Vdc (red) to Arduino 5v
-  LIDAR-Lite I2C SCL (green) to Arduino SCL
-  LIDAR-Lite I2C SDA (blue) to Arduino SDA
-  LIDAR-Lite Ground (black) to Arduino GND
-  (Capacitor recommended to mitigate inrush current when device is enabled)
-  680uF capacitor (+) to Arduino 5v
-  680uF capacitor (-) to Arduino GND
-  See the Operation Manual for wiring diagrams and more information:
-  http://static.garmin.com/pumac/LIDAR_Lite_v3HP_Operation_Manual_and_Technical_Specifications.pdf
-------------------------------------------------------------------------------*/
-
 #include <stdint.h>
 #include <Wire.h>
-#include <LIDARLite_v3HP.h>
+#include "lidarv3hp.h"
 
 LIDARLite_v3HP myLidarLite;
 
@@ -49,7 +30,7 @@ void setup()
         #endif
     #endif
 
-    myLidarLite.configure(0);
+    myLidarLite.configure(7);
 }
 
 
@@ -59,15 +40,20 @@ void loop()
     uint8_t  newDistance = 0;
     uint8_t  c;
 
+    int startTime = millis();
     for(int i=0;i<100;i++){
       newDistance = distanceFast(&distance);
-      //Serial.println(distance);
+      Serial.println(distance);
     }
 
-    int myTime = millis();
+    int endTime = millis();
     Serial.println("Time: ");
-    Serial.println(myTime);
-    while(1){}
+    int finalTime = endTime-startTime;
+    Serial.println(finalTime);
+    while(1){
+      delay(1);
+    }
+    
  
 }
 
