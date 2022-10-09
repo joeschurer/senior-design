@@ -1,0 +1,29 @@
+Measurements taken without busy wait
+-------------New Run 2-------------
+337
+0
+From the breadboard!
+-------------New Run 2-------------
+338
+1
+From the breadboard!
+-------------New Run 2-------------
+259
+2
+From the breadboard!
+-------------New Run 2-------------
+338
+3
+From the breadboard!
+-------------New Run 2-------------
+339
+4
+From the breadboard!
+-------------New Run 2-------------
+339
+5
+From the breadboard!
+-------------New Run 2-------------
+259
+7
+From the breadboard!

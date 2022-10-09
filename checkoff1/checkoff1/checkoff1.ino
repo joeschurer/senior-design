@@ -1,14 +1,16 @@
-
 #include <stdint.h>
 #include <Wire.h>
 #include "lidarv3hp.h"
 #include <SPI.h>
 #include <SD.h>
 
+
+
 LIDARLite_v3HP myLidarLite;
 
 #define FAST_I2C
 File myFile;
+int config_val = 7;
 
 enum rangeType_T
 {
@@ -20,6 +22,7 @@ enum rangeType_T
 
 void setup()
 {
+    pinMode(7, OUTPUT);
     // Initialize Arduino serial port (for display of ASCII output to PC)
     Serial.begin(9600);
 
@@ -33,27 +36,31 @@ void setup()
         #endif
     #endif
 
-    myLidarLite.configure(7);
+    //7 is good
+    myLidarLite.configure(config_val);
 
     if (!SD.begin(4)) {
       Serial.println("initialization failed!");
       while (1);
     }
 
+    SD.remove("test.txt");
     myFile = SD.open("test.txt", FILE_WRITE);
 
     
 }
 
 
-void loop()
-{
+void loop(){
+  myFile.println("-------------New Run-------------");
+    delay(1000);
     uint16_t distance;
     uint8_t  newDistance = 0;
     uint8_t  c;
 
     int startTime = millis();
     for(int i=0;i<100;i++){
+      //use distanceFast
       newDistance = distanceFast(&distance);
       myFile.println(distance);
       Serial.println(distance);
@@ -63,9 +70,17 @@ void loop()
     Serial.println("Time: ");
     int finalTime = endTime-startTime;
     Serial.println(finalTime);
+    myFile.println(finalTime);
+    myFile.println(config_val);
+    myFile.println("From the breadboard!");
+    myFile.close();
+    
     while(1){
-      myFile.close();
-      delay(1);
+      digitalWrite(7,HIGH);
+      delay(2000);
+      digitalWrite(7,LOW);
+      delay(1000);
+      Serial.println("working");
     }
     
  
@@ -73,19 +88,18 @@ void loop()
 
 uint8_t distanceFast(uint16_t * distance)
 {
-    // 1. Wait for busyFlag to indicate device is idle. This must be
-    //    done before triggering a range measurement.
     myLidarLite.waitForBusy();
-
-    // 2. Trigger range measurement.
     myLidarLite.takeRange();
+    *distance = myLidarLite.readDistance();
 
-    // 3. Read previous distance data from device registers.
-    //    After starting a measurement we can immediately read previous
-    //    distance measurement while the current range acquisition is
-    //    ongoing. This distance data is valid until the next
-    //    measurement finishes. The I2C transaction finishes before new
-    //    distance measurement data is acquired.
+    return 1;
+}
+
+uint8_t distanceSingle(uint16_t * distance)
+{
+    myLidarLite.waitForBusy();
+    myLidarLite.takeRange();
+    myLidarLite.waitForBusy();
     *distance = myLidarLite.readDistance();
 
     return 1;
