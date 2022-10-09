@@ -1,0 +1,8 @@
+Array Buffer 10k entries
+20160
+
+String 20599
+
+No buffer 20108
+
+With no writes 18974
