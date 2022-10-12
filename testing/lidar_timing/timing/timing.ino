@@ -45,7 +45,7 @@ void setup(){
     //7 is good
     myLidarLite.configure(config_val);
 
-    if (!SD.begin(4)) {
+    if (!SD.begin(10)) {
       Serial.println("initialization failed!");
       while (1);
     }
@@ -60,6 +60,10 @@ void setup(){
 
 void loop(){
     //delay(3000);
+     digitalWrite(7,HIGH);
+      delay(2000);
+      digitalWrite(7,LOW);
+      delay(10000);
     uint16_t distance;
     uint8_t  newDistance = 0;
     uint8_t  c;
@@ -67,6 +71,7 @@ void loop(){
     int startTime = millis();
     for(int i=0;i<10000;i++){
       newDistance = distanceFast(&distance);
+      myFile.print(distance);
     }
     int endTime = millis();
     //bufFlush();
@@ -76,7 +81,7 @@ void loop(){
 
     myFile.println(finalTime);
     myFile.println(config_val);
-    myFile.println("From the breadboard!");
+    myFile.println("Please help me");
     myFile.close();
     
     while(1){

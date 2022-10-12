@@ -45,7 +45,7 @@ void setup(){
     //7 is good
     myLidarLite.configure(config_val);
 
-    if (!SD.begin(4)) {
+    if (!SD.begin(10)) {
       Serial.println("initialization failed!");
       while (1);
     }
