@@ -9,7 +9,7 @@ LIDARLite_v3HP myLidarLite;
 
 #define FAST_I2C
 File myFile;
-int config_val = 0;
+int config_val = 7;
 
 const uint16_t bufSize = 240;
 uint8_t buf[bufSize];
@@ -59,7 +59,7 @@ void setup(){
 
 
 void loop(){
-    delay(3000);
+    //delay(3000);
     uint16_t distance;
     uint8_t  newDistance = 0;
     uint8_t  c;
@@ -75,7 +75,7 @@ void loop(){
     int finalTime = endTime-startTime;
 
     myFile.println(finalTime);
-
+    myFile.println(config_val);
     myFile.println("From the breadboard!");
     myFile.close();
     
@@ -108,4 +108,3 @@ uint8_t distanceSingle(uint16_t * distance)
 
     return 1;
 }
-
