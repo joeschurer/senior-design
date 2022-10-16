@@ -10,6 +10,8 @@ LIDARLite_v3HP myLidarLite;
 #define FAST_I2C
 File myFile;
 int config_val = 7;
+bool waiting = true;
+int mode = 0; //1 = high res, 2 = low res, 3 = upload
 
 void setup(){
     pinMode(7, OUTPUT);
@@ -43,6 +45,19 @@ void setup(){
 
 
 void loop(){
+  //wait for instruction from serial
+  while(waiting){
+    Serial.println("Waiting for instruction");
+    if(Serial.available()){
+      mode = Serial.read();
+      Serial.println(mode);
+    }
+    if(mode == 1 || mode == 2 || mode == 3){
+      waiting = false;
+    }
+  }
+
+  if(mode == 1|| mode == 2){
     delay(10000);
     uint16_t distance;
     uint8_t  newDistance = 0;
@@ -57,15 +72,32 @@ void loop(){
     }
 
     //int endTime = millis();
+    //Serial.println(endTime-startTime);
+    myFile.close();
 
-    
-    while(1){
-      digitalWrite(7,HIGH);
-      delay(2000);
-      digitalWrite(7,LOW);
-      delay(1000);
-      Serial.println("Scan Complete");
+    Serial.println("done");
+    waiting = true;
+    mode = 0;
+  }
+  else if(mode == 3){
+    File dataFile = SD.open("test.txt");
+    if (dataFile) {
+      while (dataFile.available()) {
+        Serial.write(dataFile.read());
+      }
+      dataFile.close();
+    }  
+    else {
+      Serial.println("error opening datalog.txt");
     }
+
+    waiting = true;
+    mode = 0;
+  }
+  else{
+    Serial.println("invalid mode");
+  }
+
     
  
 }
