@@ -7,11 +7,11 @@
 String dataBuf;
 LIDARLite_v3HP myLidarLite;
 
-#define FAST_I2C
+//#define FAST_I2C
 File myFile;
 int config_val = 7;
 bool waiting = true;
-int mode = 0; //1 = high res, 2 = low res, 3 = upload
+int mode = 0; //1 = low res, 2 = high res, 3 = upload
 
 void setup(){
     pinMode(7, OUTPUT);
@@ -21,9 +21,9 @@ void setup(){
     Wire.begin();
     #ifdef FAST_I2C
         #if ARDUINO >= 157
-            Wire.setClock(400000UL); // Set I2C frequency to 400kHz (for Arduino Due)
+            Wire.setClock(400000UL);
         #else
-            TWBR = ((F_CPU / 400000UL) - 16) / 2; // Set I2C frequency to 400kHz
+            TWBR = ((F_CPU / 400000UL) - 16) / 2;
         #endif
     #endif
 
