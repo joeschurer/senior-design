@@ -11,12 +11,12 @@ LIDARLite_v3HP myLidarLite;
 File myFile;
 int config_val = 7;
 bool waiting = true;
-int mode = 0; //1 = low res, 2 = high res, 3 = upload
+char mode = '0'; //1 = low res, 2 = high res, 3 = upload
 
 void setup(){
     pinMode(7, OUTPUT);
     pinMode(10, OUTPUT);
-    Serial.begin(9600);
+    Serial.begin(230400);
 
     Wire.begin();
     #ifdef FAST_I2C
@@ -39,7 +39,7 @@ void setup(){
     myFile = SD.open("test.txt", FILE_WRITE);
 
     //Discard first distance
-    newDistance = distanceFast(&distance);
+    
      
 }
 
@@ -47,29 +47,35 @@ void setup(){
 void loop(){
   //wait for instruction from serial
   while(waiting){
+    delay(2000);
     Serial.println("Waiting for instruction");
     if(Serial.available()){
       mode = Serial.read();
       Serial.println(mode);
     }
-    if(mode == 1 || mode == 2 || mode == 3){
+    if(mode == '1' || mode == '2' || mode == '3'){
       waiting = false;
     }
   }
 
-  if(mode == 1|| mode == 2){
+  if(mode == '1'|| mode == '2'){
     delay(10000);
     uint16_t distance;
     uint8_t  newDistance = 0;
     uint8_t  c;
+    newDistance = distanceFast(&distance);
 
+    myFile.println("BEGIN_SCAN");
+    Serial.println("BEGIN_SCAN");
     //int startTime = millis();
     for(int i=0;i<1000;i++){
       newDistance = distanceFast(&distance);
-      myFile.print(distance);
+      myFile.println(distance);
       //Serial.println(distance);
 
     }
+    myFile.println("END_SCAN");
+    Serial.println("END_SCAN");
 
     //int endTime = millis();
     //Serial.println(endTime-startTime);
@@ -77,9 +83,9 @@ void loop(){
 
     Serial.println("done");
     waiting = true;
-    mode = 0;
+    mode = '0';
   }
-  else if(mode == 3){
+  else if(mode == '3'){
     File dataFile = SD.open("test.txt");
     if (dataFile) {
       while (dataFile.available()) {
@@ -92,7 +98,7 @@ void loop(){
     }
 
     waiting = true;
-    mode = 0;
+    mode = '0';
   }
   else{
     Serial.println("invalid mode");

@@ -10,11 +10,9 @@ import time
 
 #be sure to pip install PyQt5 and pyserial
 
-ports = [
-    p.device
-    for p in serial.tools.list_ports.comports()
-    if 'USB' in p.description
-]
+ser = serial.Serial()
+ports = []
+
 
 class Worker(QObject):
     finished = pyqtSignal()
@@ -36,17 +34,39 @@ class Worker(QObject):
 
 class SeniorDesign_UI(QtWidgets.QMainWindow):
     def __init__(self):
-            super(SeniorDesign_UI, self).__init__()
-            ui_path = os.path.dirname(os.path.abspath(__file__))
-            uic.loadUi(os.path.join(ui_path,'SeniorDesign_UI.ui'), self)
+        self.thread = None
+        self.worker = None
 
-            if len(ports) >= 1:
-                warnings.warn('Connected....')
-                ser = serial.Serial(ports[0],9600)
-                self.port_label.setText(ports[0])
-            self.show()
+        ports = [
+            p.device
+            for p in serial.tools.list_ports.comports()
+            if 'USB' in p.description
+        ]
+
+        super(SeniorDesign_UI, self).__init__()
+        ui_path = os.path.dirname(os.path.abspath(__file__))
+        uic.loadUi(os.path.join(ui_path,'SeniorDesign_UI.ui'), self)
+
+        if len(ports) >= 1:
+            warnings.warn('Connected....')
+            ser.port = ports[0]
+            ser.baudrate = 230400
+            self.port_label.setText(ports[0])
+            #ser.open()
+            self.start_loop()
+        self.show()
+
+    def loop_finished(self):
+        print("Loop done")
+        #do any needed ui updates
+
+    def onIntReady(self, i):
+            self.textEdit.append("{}".format(i))
+            print(i)
 
     def start_loop(self):
+        if(ser.isOpen() == False):
+            ser.open()
 
         self.worker = Worker()   # a new worker to perform those tasks
         self.thread = QThread()  # a new thread to run our background tasks in
@@ -56,7 +76,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
         self.worker.intReady.connect(self.onIntReady)
 
-        self.pushButton_2.clicked.connect(self.stop_loop)      # stop the loop on the stop button click
+        self.stop_button.clicked.connect(self.stop_loop)      # stop the loop on the stop button click
 
         self.worker.finished.connect(self.loop_finished)       # do something in the gui when the worker loop ends
         self.worker.finished.connect(self.thread.quit)         # tell the thread it's time to stop running
@@ -67,10 +87,6 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
     def stop_loop(self):
         self.worker.working = False
-
-    def onIntReady(self, i):
-        self.textEdit.append("{}".format(i))
-        print(i)
 
 
     def on_save_button_clicked(self):
@@ -87,18 +103,30 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         ]
 
         for index, port in enumerate(ports):
-            device_box.setItemText(index,port)
+            self.device_box.setItemText(index,port)
 
 
     def on_connect_button_clicked(self):
-        p = device_box.currentIndex()
-        ser = serial.Serial(ports[p],9600)
+        p = self.device_box.currentIndex()
+        ports = [
+            p.device
+            for p in serial.tools.list_ports.comports()
+            if 'USB' in p.description
+        ]
+
+        print(p)
+        print(ports)
+        ser = serial.Serial(ports[p],230400)
+        ser.port = ports[p]
+        ser.baudrate = 230400
+        self.start_loop()
 
     def on_upload_button_clicked(self):
-        option = prog_select.currentIndex()
+        option = self.prog_select.currentIndex()
         if(option != 0):
-            print(option.encode())
-            ser.write(option.encode())
+            to_send = str(option)
+            print(to_send.encode())
+            ser.write(to_send.encode())
 
     def on_clear_button_clicked(self):
         self.textEdit.clear()
