@@ -3,6 +3,7 @@
 #include "lidarv3hp.h"
 #include <SPI.h>
 #include <SD.h>
+#include <Stepper.h>
 
 String dataBuf;
 LIDARLite_v3HP myLidarLite;
@@ -13,7 +14,19 @@ int config_val = 7;
 bool waiting = true;
 char mode = '0'; //1 = low res, 2 = high res, 3 = upload
 
+//https://www.elegoo.com/products/elegoo-uln2003-5v-stepper-motor-uln2003-driver-board
+
+//Motor control
+const int stepsPerRevolution = 2048;  // change this to fit the number of steps per revolution
+const int RevolutionsPerMinute = 15;         // Adjustable range of 28BYJ-48 stepper is 0~17 rpm
+
+// initialize the stepper library on pins 8 through 11:
+Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+
 void setup(){
+  //motor setup
+  myStepper.setSpeed(RevolutionsPerMinute);
+
     pinMode(7, OUTPUT);
     pinMode(10, OUTPUT);
     Serial.begin(230400);
@@ -68,12 +81,25 @@ void loop(){
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
     //int startTime = millis();
+
+    /*
     for(int i=0;i<1000;i++){
       newDistance = distanceFast(&distance);
       myFile.println(distance);
       //Serial.println(distance);
 
     }
+    */
+  int stepCount = 0;
+  while(stepCount < stepsPerRevolution){
+    myStepper.step(1);
+    newDistance = distanceFast(&distance);
+
+    //create string to write to file with distance and angle
+    String dataBuf = String(distance) + "," + String(stepCount) + "\n";
+    myFile.print(dataBuf);
+    stepCount++;
+  }
     myFile.println("END_SCAN");
     Serial.println("END_SCAN");
 
