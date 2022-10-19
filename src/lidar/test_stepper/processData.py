@@ -8,7 +8,7 @@ f = open('1dscan.csv','w')
 f.truncate()
 f.close()
 
-read_file = pd.read_csv('1dscan.txt')
+read_file = pd.read_csv('TEST.txt')
 read_file.to_csv('1dscan.csv')
 #f = open('/Users/collinhough/Unity/Senior Design/Assets/test_csv.csv', 'w')
 f = open('1dscan.csv')
@@ -22,7 +22,6 @@ to_meters = 1/100
 for row in reader:
     dist = float(row[1])
     step_count = float(row[2])
-    print(row)
     x_s.append((dist*math.cos(angle*step_count)) * to_meters)
     y_s.append((dist*math.sin(angle*step_count) * to_meters))
 
