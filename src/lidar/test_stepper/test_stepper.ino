@@ -21,7 +21,7 @@ const int stepsPerRevolution = 2048;  // change this to fit the number of steps 
 const int RevolutionsPerMinute = 15;         // Adjustable range of 28BYJ-48 stepper is 0~17 rpm
 
 // initialize the stepper library on pins 8 through 11:
-Stepper myStepper(stepsPerRevolution, 8, 10, 9, 11);
+Stepper myStepper(stepsPerRevolution, 8, 5, 6, 9);
 
 void setup(){
   //motor setup
@@ -92,12 +92,11 @@ void loop(){
     */
   int stepCount = 0;
   while(stepCount < stepsPerRevolution){
-    myStepper.step(1);
     newDistance = distanceFast(&distance);
-
+    myStepper.step(1);
     //create string to write to file with distance and angle
     String dataBuf = String(distance) + "," + String(stepCount) + "\n";
-    myFile.print(dataBuf);
+    myFile.println(dataBuf);
     stepCount++;
   }
     myFile.println("END_SCAN");
