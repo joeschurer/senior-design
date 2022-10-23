@@ -26,8 +26,8 @@ class Worker(QObject):
     def work(self):
         while self.working:
             line = ser.readline().decode('utf-8')
-            print(line)
-            time.sleep(0.1)
+            #print(line)
+            #time.sleep(0.1)
             self.intReady.emit(line)
 
         self.finished.emit()
@@ -62,14 +62,14 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
     def onIntReady(self, i):
             self.textEdit.append("{}".format(i))
-            print(i)
+            #print(i)
 
     def start_loop(self):
         if(ser.isOpen() == False):
             ser.open()
 
-        self.worker = Worker()   # a new worker to perform those tasks
-        self.thread = QThread()  # a new thread to run our background tasks in
+        self.worker = Worker()
+        self.thread = QThread()
         self.worker.moveToThread(self.thread)  # move the worker into the thread, do this first before connecting the signals
 
         self.thread.started.connect(self.worker.work) # begin our worker object's loop when the thread starts running
@@ -77,11 +77,11 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.worker.intReady.connect(self.onIntReady)
 
         self.stop_button.clicked.connect(self.stop_loop)      # stop the loop on the stop button click
-
+        self.connect_button.clicked.connect(self.reconnect)
         self.worker.finished.connect(self.loop_finished)       # do something in the gui when the worker loop ends
         self.worker.finished.connect(self.thread.quit)         # tell the thread it's time to stop running
-        self.worker.finished.connect(self.worker.deleteLater)  # have worker mark itself for deletion
-        self.thread.finished.connect(self.thread.deleteLater)  # have thread mark itself for deletion
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.thread.deleteLater)
 
         self.thread.start()
 
@@ -93,6 +93,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         with open('test.txt', 'w') as f:
             my_text = self.textEdit.toPlainText()
+            print(my_text)
             f.write(my_text)
 
     def on_scan_button_clicked(self):
@@ -106,7 +107,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             self.device_box.setItemText(index,port)
 
 
-    def on_connect_button_clicked(self):
+    def reconnect(self):
         p = self.device_box.currentIndex()
         ports = [
             p.device
@@ -116,10 +117,14 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
         print(p)
         print(ports)
-        ser = serial.Serial(ports[p],230400)
-        ser.port = ports[p]
-        ser.baudrate = 230400
-        self.start_loop()
+        if(ports):
+            ser = serial.Serial(ports[p],230400)
+            ser.port = ports[p]
+            ser.baudrate = 230400
+            self.worker.working = True
+            #self.start_loop()
+        else:
+            print("No ports identified. Skipping...")
 
     def on_upload_button_clicked(self):
         option = self.prog_select.currentIndex()
