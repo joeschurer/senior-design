@@ -93,8 +93,8 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         with open('test.txt', 'w') as f:
             my_text = self.textEdit.toPlainText()
-            print(my_text)
-            f.write(my_text)
+            file_text = my_text[my_text.find("file_begin"):]
+            f.write(file_text)
 
     def on_scan_button_clicked(self):
         ports = [

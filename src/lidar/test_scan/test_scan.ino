@@ -9,9 +9,37 @@ LIDARLite_v3HP myLidarLite;
 
 //#define FAST_I2C
 File myFile;
-int config_val = 7;
+int config_val = 0; // Be accurate
 bool waiting = true;
 char mode = '0'; //1 = low res, 2 = high res, 3 = upload
+
+// Define constants
+uint16_t enc1 = 0;
+uint16_t enc2 = 0;
+uint16_t stepCount = 0;
+uint16_t stepCount2 = 0;
+bool dir1 = 1;
+bool dir2 = 1;
+bool edge = 0;
+
+// Step, direction, encoder pins
+
+// Port B variables
+const uint8_t e1a = 0; // Sweep a/b phase
+const uint8_t e1b = 1;
+
+// Port C variables (0,1,2,3)
+const uint8_t e1z = 0; // Sweep z phase
+
+const uint8_t step1 = 1; // Step, direction sweep
+const uint8_t d1 = 2;
+
+// Port D variables (3,4,5,6,7)
+const uint8_t e2a = 3; // Elevation a/b phase
+const uint8_t e2b = 4;
+
+const uint8_t step2 = 5; // Step, direction elevation
+const uint8_t d2 = 6;
 
 void setup(){
     pinMode(7, OUTPUT);
@@ -39,7 +67,12 @@ void setup(){
     myFile = SD.open("test.txt", FILE_WRITE);
 
     //Discard first distance
-    
+
+    clkSetup(3200);
+
+  encoderSetup();
+
+      
      
 }
 
@@ -49,7 +82,7 @@ void loop(){
   while(waiting){
     delay(2000);
     Serial.println("Waiting for instruction");
-    if(Serial.available()){
+    while(Serial.available()){
       mode = Serial.read();
       Serial.println(mode);
     }
@@ -59,23 +92,43 @@ void loop(){
   }
 
   if(mode == '1'|| mode == '2'){
-    delay(10000);
+    delay(5000);
     uint16_t distance;
     uint8_t  newDistance = 0;
     uint8_t  c;
     newDistance = distanceFast(&distance);
 
+    
+    //int startTime = millis();
+    startClk();
+
+    //dir s
+    while(dir1 ==1){
+      Serial.println("Loop one");
+    }
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
-    //int startTime = millis();
-    for(int i=0;i<1000;i++){
-      newDistance = distanceFast(&distance);
-      myFile.println(distance);
-      //Serial.println(distance);
-
+    while(dir1 == 0){
+      newDistance = distanceSingle(&distance);
+      if(distance == 0){
+        newDistance = distanceSingle(&distance);
+      }
+      String dataBuf = String(distance) + "," + String(stepCount);
+      myFile.println(dataBuf);
+      //Serial.println("Loop two");
+      
     }
+    //stopClk();
+    
     myFile.println("END_SCAN");
     Serial.println("END_SCAN");
+    myFile.print(dir1);
+    myFile.print("\t");
+    myFile.print(enc1);
+    myFile.print("\t");
+    myFile.print(stepCount);
+    myFile.print("\t");
+    myFile.println(enc2);
 
     //int endTime = millis();
     //Serial.println(endTime-startTime);
@@ -86,16 +139,20 @@ void loop(){
     mode = '0';
   }
   else if(mode == '3'){
+    
     File dataFile = SD.open("test.txt");
     if (dataFile) {
+      Serial.println("file_begin");
       while (dataFile.available()) {
         Serial.write(dataFile.read());
       }
       dataFile.close();
+      Serial.println("file_end");
     }  
     else {
       Serial.println("error opening datalog.txt");
     }
+    
 
     waiting = true;
     mode = '0';
@@ -112,6 +169,15 @@ uint8_t distanceFast(uint16_t * distance)
 {
     myLidarLite.waitForBusy();
     myLidarLite.takeRange();
+    *distance = myLidarLite.readDistance();
+
+    return 1;
+}
+
+uint8_t distanceSingle(uint16_t * distance){
+    myLidarLite.waitForBusy();
+    myLidarLite.takeRange();
+    myLidarLite.waitForBusy();
     *distance = myLidarLite.readDistance();
 
     return 1;
