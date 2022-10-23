@@ -10,7 +10,7 @@ LIDARLite_v3HP myLidarLite;
 
 //#define FAST_I2C
 File myFile;
-int config_val = 7;
+int config_val = 0;
 bool waiting = true;
 char mode = '0'; //1 = low res, 2 = high res, 3 = upload
 
