@@ -8,7 +8,7 @@ f = open('1dscan.csv','w')
 f.truncate()
 f.close()
 
-read_file = pd.read_csv('TEST.txt')
+read_file = pd.read_csv('../../../scans/2Dscan.txt')
 read_file.to_csv('1dscan.csv')
 #f = open('/Users/collinhough/Unity/Senior Design/Assets/test_csv.csv', 'w')
 f = open('1dscan.csv')
@@ -17,13 +17,14 @@ f = open('1dscan.csv')
 reader = csv.reader(f)
 x_s = []
 y_s = []
-angle = 360/2048
+average_total_steps = 25600
 to_meters = 1/100
 for row in reader:
     dist = float(row[1])
     step_count = float(row[2])
-    x_s.append((dist*math.cos(angle*step_count)) * to_meters)
-    y_s.append((dist*math.sin(angle*step_count) * to_meters))
+    angle = (step_count/average_total_steps) * 360
+    x_s.append((dist*math.cos(math.radians(angle)) * to_meters))
+    y_s.append((dist*math.sin(math.radians(angle)) * to_meters))
 
 # Write x and y values to file
 f.close()
