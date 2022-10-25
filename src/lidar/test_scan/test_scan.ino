@@ -13,6 +13,7 @@ int config_val = 0; // Be accurate
 bool waiting = true;
 char mode = '0'; //1 = low res, 2 = high res, 3 = upload
 
+
 // Define constants
 uint16_t enc1 = 0;
 uint16_t enc2 = 0;
@@ -41,6 +42,7 @@ const uint8_t e2b = 4;
 const uint8_t step2 = 5; // Step, direction elevation
 const uint8_t d2 = 6;
 
+
 void setup(){
     pinMode(7, OUTPUT);
     pinMode(10, OUTPUT);
@@ -68,14 +70,13 @@ void setup(){
 
     //Discard first distance
 
-    clkSetup(3200);
+  //  clkSetup(3200);
 
-  encoderSetup();
+//  encoderSetup();
 
       
      
 }
-
 
 void loop(){
   //wait for instruction from serial
@@ -83,6 +84,10 @@ void loop(){
     delay(2000);
     Serial.println("Waiting for instruction");
     while(Serial.available()){
+      char temp = Serial.read();
+      if(temp == '1' || temp == '2' || temp == '3'){
+      mode = temp;
+      }
       mode = Serial.read();
       Serial.println(mode);
     }
@@ -99,27 +104,38 @@ void loop(){
     newDistance = distanceFast(&distance);
 
     
-    //int startTime = millis();
-    startClk();
-
-    //dir s
-    while(dir1 ==1){
-      Serial.println("Loop one");
-    }
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
+    //int startTime = millis();
+   // startClk();
+    unsigned long startTime = millis();
+    /*
+    //dir 
+    while(dir1 ==1){
+      //Serial.println("Loop one");
+    }
     while(dir1 == 0){
-      newDistance = distanceSingle(&distance);
+      newDistance = distanceFast(&distance);
       if(distance == 0){
-        newDistance = distanceSingle(&distance);
+        //newDistance = distanceSingle(&distance);
       }
       String dataBuf = String(distance) + "," + String(stepCount);
       myFile.println(dataBuf);
-      //Serial.println("Loop two");
-      
+      //Serial.println("Loop two"); 
+    }*/
+
+    for(int i=0;i<10000;i++){
+
+      newDistance = distanceFast(&distance);
+      if(distance == 0){
+        //newDistance = distanceSingle(&distance);
+      }
+      String dataBuf = String(distance) + "," + String(stepCount);
+      myFile.println(dataBuf);
     }
     //stopClk();
-    
+    unsigned long  endTime = millis();
+    unsigned long  totalTime = endTime-startTime;
     myFile.println("END_SCAN");
     Serial.println("END_SCAN");
     myFile.print(dir1);
@@ -130,6 +146,10 @@ void loop(){
     myFile.print("\t");
     myFile.println(enc2);
 
+    myFile.print("Time: ");
+    myFile.println(totalTime);
+    Serial.print("Time: ");
+    Serial.println(totalTime);
     //int endTime = millis();
     //Serial.println(endTime-startTime);
     myFile.close();
