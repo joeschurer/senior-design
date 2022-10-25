@@ -140,7 +140,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
 
     def initUI(self):
-        self.upload_button.clicked.connect(self.upload)
+        self.upload_button.released.connect(self.upload)
 
 
 
