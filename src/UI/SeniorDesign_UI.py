@@ -63,6 +63,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             self.port_label.setText(ports[0])
             self.start_loop()
         self.show()
+        self.initUI()
 
     def loop_finished(self):
         print("Loop done")
@@ -124,7 +125,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         else:
             print("No ports identified. Skipping...")
 
-    def on_upload_button_clicked(self):
+    def upload(self):
         try:
             option = self.prog_select.currentIndex()
             if(option != 0):
@@ -137,6 +138,9 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     def on_clear_button_clicked(self):
         self.textEdit.clear()
 
+
+    def initUI(self):
+        self.upload_button.clicked.connect(self.upload)
 
 
 
