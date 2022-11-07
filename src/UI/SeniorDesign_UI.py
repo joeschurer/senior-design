@@ -22,15 +22,24 @@ class Worker(QObject):
     def __init__(self):
         super(Worker, self).__init__()
         self.working = True
+        self.is_paused = False
 
     def work(self):
         while self.working:
+            while self.is_paused: #Provides the ability to pause the thread
+                time.sleep(0)
+                            
             line = ser.readline().decode('utf-8')
             #print(line)
-            #time.sleep(0.1)
             self.intReady.emit(line)
 
         self.finished.emit()
+
+    def pause_thread(self):
+        self.is_paused = True
+
+    def unpause_thread(self):
+        self.is_paused = False
 
 class SeniorDesign_UI(QtWidgets.QMainWindow):
     def __init__(self):
@@ -52,17 +61,16 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             ser.port = ports[0]
             ser.baudrate = 230400
             self.port_label.setText(ports[0])
-            #ser.open()
             self.start_loop()
         self.show()
+        self.initUI()
 
     def loop_finished(self):
         print("Loop done")
-        #do any needed ui updates
 
     def onIntReady(self, i):
-            self.textEdit.append("{}".format(i))
-            #print(i)
+        self.textEdit.append("{}".format(i))
+
 
     def start_loop(self):
         if(ser.isOpen() == False):
@@ -70,30 +78,23 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
         self.worker = Worker()
         self.thread = QThread()
-        self.worker.moveToThread(self.thread)  # move the worker into the thread, do this first before connecting the signals
-
-        self.thread.started.connect(self.worker.work) # begin our worker object's loop when the thread starts running
-
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.work)
         self.worker.intReady.connect(self.onIntReady)
-
-        self.stop_button.clicked.connect(self.stop_loop)      # stop the loop on the stop button click
+        self.stop_button.clicked.connect(self.worker.pause_thread)
+        self.start_button.clicked.connect(self.worker.unpause_thread)
         self.connect_button.clicked.connect(self.reconnect)
-        self.worker.finished.connect(self.loop_finished)       # do something in the gui when the worker loop ends
-        self.worker.finished.connect(self.thread.quit)         # tell the thread it's time to stop running
+        self.worker.finished.connect(self.loop_finished)
+        self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
 
         self.thread.start()
 
-    def stop_loop(self):
-        self.worker.working = False
-
-
     def on_save_button_clicked(self):
-        #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
         with open('test.txt', 'w') as f:
             my_text = self.textEdit.toPlainText()
-            file_text = my_text[my_text.find("file_begin"):]
+            file_text = my_text[my_text.find("file_begin"):my_text.find("file_end")] #Should grab only the file for Colin
             f.write(file_text)
 
     def on_scan_button_clicked(self):
@@ -121,20 +122,26 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             ser = serial.Serial(ports[p],230400)
             ser.port = ports[p]
             ser.baudrate = 230400
-            self.worker.working = True
-            #self.start_loop()
         else:
             print("No ports identified. Skipping...")
 
-    def on_upload_button_clicked(self):
-        option = self.prog_select.currentIndex()
-        if(option != 0):
-            to_send = str(option)
-            print(to_send.encode())
-            ser.write(to_send.encode())
+    def upload(self):
+        try:
+            option = self.prog_select.currentIndex()
+            if(option != 0):
+                to_send = str(option)
+                print(to_send.encode())
+                ser.write(to_send.encode())
+        except:
+            print("Serial possibly not connected, failed to upload!")
 
     def on_clear_button_clicked(self):
         self.textEdit.clear()
+
+
+    def initUI(self):
+        self.upload_button.released.connect(self.upload)
+
 
 
 
