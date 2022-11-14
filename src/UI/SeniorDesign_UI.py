@@ -149,5 +149,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = SeniorDesign_UI()
+    title = "Senior Design"
+    window.setWindowTitle(title)
     app.exec_()
 
