@@ -3,22 +3,22 @@
 void zeroElevation()
 {
   // Mask elevation a/b phases, enable elevation z phase
-  PCMSK2 &= ~(1<<e2a || 1<<e2b);
+  PCMSK2 &= ~(1<<e2a | 1<<e2b);
   PCMSK2|= (1<<e2z);
 
   // Set elevation direction to down
   dir2 = 0;
   PORTD &= ~(1<<d2);
 
-  while(~enc2)
+  while(enc2 <= 0)
   {
     PIND |= (1<<step2); // Jog elevation motor until z phase limit reached
-    delay(3); // Slow down reasonable amount
+    delay(5); // Slow down reasonable amount
   }
 
   // Reset interrupt mask
   PCMSK2 &= ~(1<<e2z);
-  PCMSK2 |= (1<<e2a || 1<<e2b);
+  PCMSK2 |= (1<<e2a | 1<<e2b);
 
   // Flip direction back
   dir2 = 1;

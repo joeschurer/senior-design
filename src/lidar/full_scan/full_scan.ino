@@ -9,11 +9,12 @@ LIDARLite_v3HP myLidarLite;
 
 //#define FAST_I2C
 File myFile;
-int config_val = 0; // Be accurate
+int config_val = 2; // Be accurate
 bool waiting = true;
-char mode = '0'; //1 = low res, 2 = high res, 3 = upload
+char mode = '1'; //1 = low res, 2 = high res, 3 = upload
 
 //From Adams code
+
 // Define constants
 // Store encoder counts on sweep and elevation motors
 uint16_t enc1 = 0;
@@ -55,11 +56,8 @@ const uint8_t d2 = 6;
 
 const uint8_t e2z = 7; // Elevation z phase
 
-
 void setup(){
-    pinMode(7, OUTPUT);
-    pinMode(10, OUTPUT);
-    Serial.begin(230400);
+    Serial.begin(115200);
 
     Wire.begin();
     #ifdef FAST_I2C
@@ -82,15 +80,11 @@ void setup(){
     myFile = SD.open("test.txt", FILE_WRITE);
 
     //Discard first distance
+    clkSetup(10,10);
 
-    clkSetup(1);
+     encoderSetup();
 
-  encoderSetup();
-
-//  encoderSetup();
-
-      
-     
+  
 }
 
 void loop(){
@@ -124,16 +118,16 @@ void loop(){
     //int startTime = millis();
     
     //dir 
-    while(dir1 ==1){
+    /*while(dir1 ==1){
       startClk();
       delay(2);
-    }
-    while(1){
+    }*/
+    while(stepCount2 < 4800){
       newDistance = distanceFast(&distance);
-      String dataBuf = String(distance) + "," + String(stepCount);
+      String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       Serial.println(dataBuf);
       myFile.println(dataBuf);
-      startClk();
+      sweepStep();
       //Serial.println("Loop two"); 
     }
     myFile.println("END_SCAN");

@@ -10,7 +10,7 @@ LIDARLite_v3HP myLidarLite;
 
 //#define FAST_I2C
 File myFile;
-int config_val = 0;
+int config_val = 2;
 bool waiting = true;
 char mode = '0'; //1 = low res, 2 = high res, 3 = upload
 void setup(){
@@ -68,19 +68,28 @@ void loop(){
 
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
-    unsigned long startTime = millis();
+    /*/unsigned long startTime = millis();
     for(int i = 0; i< 100000;i++){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
       myFile.print(dataBuf);
+      if(i%10000==0){
+        Serial.println(i);
+      }
+    }*/
+
+    for(int i = 0; i< 1000;i++){
+      newDistance = distanceFast(&distance);
+      String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
+      myFile.print(dataBuf);
+      Serial.println(dataBuf);
     }
-    unsigned long endTime = millis();
+    myFile.println("FROM PCB :)");
+    //unsigned long endTime = millis();
     myFile.println("END_SCAN");
     Serial.println("END_SCAN");
 
-    Serial.println(endTime-startTime);
-    myFile.print("Time : ");
-    myFile.println(endTime-startTime);
+    //Serial.println(endTime-startTime);
     myFile.close();
 
     Serial.println("done");
