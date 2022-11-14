@@ -60,7 +60,7 @@ void loop(){
   }
 
   if(mode == '1'|| mode == '2'){
-    delay(10000);
+    delay(5000);
     uint16_t distance;
     uint8_t  newDistance = 0;
     uint8_t  c;
@@ -78,11 +78,14 @@ void loop(){
       }
     }*/
 
-    for(int i = 0; i< 1000;i++){
+    for(unsigned long i = 0; i< 100000;i++){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
       myFile.print(dataBuf);
-      Serial.println(dataBuf);
+      //Serial.println(dataBuf);
+      if(i%10000==0){
+        Serial.println(i);
+      }
     }
     myFile.println("FROM PCB :)");
     //unsigned long endTime = millis();
