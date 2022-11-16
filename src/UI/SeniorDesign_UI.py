@@ -17,6 +17,7 @@ ports = []
 class Worker(QObject):
     finished = pyqtSignal()
     intReady = pyqtSignal(str)
+    disconnectError = pyqtSignal()
 
     @pyqtSlot()
     def __init__(self):
@@ -34,6 +35,7 @@ class Worker(QObject):
                 self.intReady.emit(line)
             except:
                 self.is_paused = True
+                self.disconnectError.emit()
 
         self.finished.emit()
 
@@ -74,6 +76,9 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     def onIntReady(self, i):
         self.textEdit.append("{}".format(i))
 
+    def onDisconnectError(self):
+        self.port_label.setText("Disconnected")
+
 
     def start_loop(self):
         self.loop_status = True
@@ -85,6 +90,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.work)
         self.worker.intReady.connect(self.onIntReady)
+        self.worker.disconnectError.connect(self.onDisconnectError)
         #self.stop_button.clicked.connect(self.worker.pause_thread)
         #self.start_button.clicked.connect(self.worker.unpause_thread)
         #self.connect_button.clicked.connect(self.reconnect)
@@ -135,11 +141,12 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         if(ports):
             ser.port = ports[p]
             ser.baudrate = 230400
-            self.port_label.setText(ports[0])
             if(self.loop_status== False):
                 self.start_loop()
             else:
                 self.worker.unpause_thread()
+            print(ports[p])
+            self.port_label.setText(ports[p])
         else:
             print("No ports identified. Skipping...")
 
