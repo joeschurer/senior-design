@@ -34,8 +34,10 @@ class Worker(QObject):
                 #print(line)
                 self.intReady.emit(line)
             except:
+                print("Failed to read!")
                 self.is_paused = True
                 self.disconnectError.emit()
+
 
         self.finished.emit()
 
@@ -56,17 +58,17 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             for p in serial.tools.list_ports.comports()
             #if 'USB' in p.description
         ]
-
+        print(ports)
         super(SeniorDesign_UI, self).__init__()
         ui_path = os.path.dirname(os.path.abspath(__file__))
         uic.loadUi(os.path.join(ui_path,'SeniorDesign_UI.ui'), self)
 
-        if len(ports) >= 1:
-            warnings.warn('Connected....')
-            ser.port = ports[0]
-            ser.baudrate = 230400
-            self.port_label.setText(ports[0])
-            self.start_loop()
+        #if len(ports) >= 1:
+            #warnings.warn('Connected....')
+            #ser.port = ports[0]
+            #ser.baudrate = 230400
+            #self.port_label.setText(ports[0])
+            #self.start_loop()
         self.show()
         self.initUI()
 
@@ -75,6 +77,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
     def onIntReady(self, i):
         self.textEdit.append("{}".format(i))
+        self.port_label.setText(str(ser.port))
 
     def onDisconnectError(self):
         self.port_label.setText("Disconnected")
@@ -124,8 +127,10 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             #if 'USB' in p.description
         ]
         print(ports)
-        for index, port in enumerate(ports):
-            self.device_box.setItemText(index,port)
+        if len(ports) >= 1:
+            self.device_box.clear()
+            for port in ports:
+                self.device_box.addItem(port)
 
 
     def on_connect_button_clicked(self):
