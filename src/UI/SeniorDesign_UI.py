@@ -85,8 +85,8 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.work)
         self.worker.intReady.connect(self.onIntReady)
-        self.stop_button.clicked.connect(self.worker.pause_thread)
-        self.start_button.clicked.connect(self.worker.unpause_thread)
+        #self.stop_button.clicked.connect(self.worker.pause_thread)
+        #self.start_button.clicked.connect(self.worker.unpause_thread)
         #self.connect_button.clicked.connect(self.reconnect)
         self.worker.finished.connect(self.loop_finished)
         self.worker.finished.connect(self.thread.quit)
@@ -102,6 +102,14 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
             file_text = file_text.split("BEGIN_SCAN\n")
             print(file_text)
             f.write(file_text[1])
+
+    def on_stop_button_clicked(self):
+        self.worker.pause_thread()
+        print("Thread Paused")
+
+    def on_start_button_clicked(self):
+        self.worker.unpause_thread()
+        print("Thread Unpaused")
 
     def on_scan_button_clicked(self):
         ports = [
