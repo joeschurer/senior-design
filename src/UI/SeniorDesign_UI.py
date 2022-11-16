@@ -28,10 +28,12 @@ class Worker(QObject):
         while self.working:
             while self.is_paused: #Provides the ability to pause the thread
                 time.sleep(0)
-                            
-            line = ser.readline().decode('utf-8')
-            #print(line)
-            self.intReady.emit(line)
+            try:
+                line = ser.readline().decode('utf-8')[:-2]
+                #print(line)
+                self.intReady.emit(line)
+            except:
+                self.is_paused = True
 
         self.finished.emit()
 
@@ -42,14 +44,15 @@ class Worker(QObject):
         self.is_paused = False
 
 class SeniorDesign_UI(QtWidgets.QMainWindow):
+    thread = None
+    worker = None
+    loop_status = False
     def __init__(self):
-        self.thread = None
-        self.worker = None
 
         ports = [
             p.device
             for p in serial.tools.list_ports.comports()
-            if 'USB' in p.description
+            #if 'USB' in p.description
         ]
 
         super(SeniorDesign_UI, self).__init__()
@@ -73,6 +76,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
 
     def start_loop(self):
+        self.loop_status = True
         if(ser.isOpen() == False):
             ser.open()
 
@@ -83,7 +87,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.worker.intReady.connect(self.onIntReady)
         self.stop_button.clicked.connect(self.worker.pause_thread)
         self.start_button.clicked.connect(self.worker.unpause_thread)
-        self.connect_button.clicked.connect(self.reconnect)
+        #self.connect_button.clicked.connect(self.reconnect)
         self.worker.finished.connect(self.loop_finished)
         self.worker.finished.connect(self.thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
@@ -94,34 +98,40 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     def on_save_button_clicked(self):
         with open('test.txt', 'w') as f:
             my_text = self.textEdit.toPlainText()
-            file_text = my_text[my_text.find("file_begin"):my_text.find("file_end")] #Should grab only the file for Colin
-            f.write(file_text)
+            file_text = my_text[my_text.find("BEGIN_SCAN"):my_text.find("END_SCAN")] #Should grab only the file for Collin
+            file_text = file_text.split("BEGIN_SCAN\n")
+            print(file_text)
+            f.write(file_text[1])
 
     def on_scan_button_clicked(self):
         ports = [
             p.device
             for p in serial.tools.list_ports.comports()
-            if 'USB' in p.description
+            #if 'USB' in p.description
         ]
-
+        print(ports)
         for index, port in enumerate(ports):
             self.device_box.setItemText(index,port)
 
 
-    def reconnect(self):
+    def on_connect_button_clicked(self):
         p = self.device_box.currentIndex()
         ports = [
             p.device
             for p in serial.tools.list_ports.comports()
-            if 'USB' in p.description
+            #if 'USB' in p.description
         ]
 
         print(p)
         print(ports)
         if(ports):
-            ser = serial.Serial(ports[p],230400)
             ser.port = ports[p]
             ser.baudrate = 230400
+            self.port_label.setText(ports[0])
+            if(self.loop_status== False):
+                self.start_loop()
+            else:
+                self.worker.unpause_thread()
         else:
             print("No ports identified. Skipping...")
 
