@@ -4,36 +4,52 @@ import random
 import pandas as pd
 
 
-f = open('1dscan.csv','w')
-f.truncate()
-f.close()
+# f = open('3dscan.csv','w')
+# f.truncate()
+# f.close()
 
-read_file = pd.read_csv('../../../scans/2Dscan.txt')
-read_file.to_csv('1dscan.csv')
+read_file = pd.read_csv('../../../scans/bestet3dscan.txt')
+read_file.to_csv('3dscan.csv')
 #f = open('/Users/collinhough/Unity/Senior Design/Assets/test_csv.csv', 'w')
-f = open('1dscan.csv')
+f = open('3dscan.csv')
 
 # Read and find x and y values
 reader = csv.reader(f)
 x_s = []
 y_s = []
+z_s = []
 average_total_steps = 25600
 to_meters = 1/100
 for row in reader:
+    # Read in parameters
     dist = float(row[1])
     step_count = float(row[2])
-    angle = (step_count/average_total_steps) * 360
-    x_s.append((dist*math.cos(math.radians(angle)) * to_meters))
-    y_s.append((dist*math.sin(math.radians(angle)) * to_meters))
+    step_count2 = float(row[3])
+    direction = bool(row[4])
+
+    # Check for overflow
+    if step_count > 25600:
+        continue
+
+    # Calculate x, y, and z
+    angle_sweep = (step_count/average_total_steps) * 360
+    angle_elevation = ((step_count2/average_total_steps) * 360) + 90
+
+    if direction == 0:
+        angle_sweep = 360 - angle_sweep
+    
+    x_s.append(dist * math.sin(math.radians(angle_elevation)) * math.cos(math.radians(angle_sweep)) * to_meters)
+    y_s.append(dist * math.cos(math.radians(angle_elevation)) * to_meters * -1)
+    z_s.append(dist * math.sin(math.radians(angle_sweep)) * math.sin(math.radians(angle_elevation)) * to_meters)
 
 # Write x and y values to file
 f.close()
 
-f = open('1dscan.csv','w')
+f = open('3dscan.csv','w')
 f.truncate()
 writer = csv.writer(f)
 for i in range(len(x_s)):
-    writer.writerow([x_s[i],y_s[i],0])
+    writer.writerow([x_s[i],y_s[i],z_s[i]])
 
 # Create 2-D circle of radius r
 # r = 5
