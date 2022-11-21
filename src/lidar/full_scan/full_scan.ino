@@ -83,7 +83,7 @@ void setup(){
     myFile = SD.open("test.txt", FILE_WRITE);
 
     //Discard first distance
-    clkSetup(100,100);
+    clkSetup(10,10);
 
      encoderSetup();
 
@@ -132,11 +132,12 @@ void loop(){
       startClk();
       delay(2);
     }*/
-    while(stepCount2 < 12800 && stepCount <30000){
+    //while(stepCount2 < 12800 && stepCount <30000){
+    while(stepCount2 < 12800){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
-      //Serial.println(dataBuf);
+      Serial.println(dataBuf);
       myFile.println(dataBuf);
       sweepStep();
       if(mode == '1'){
