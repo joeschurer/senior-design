@@ -58,14 +58,19 @@ void loop(){
     delay(5000);
     uint16_t distance;
     distance = getRange();
+    String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
+    Serial.println(dataBuf);
 
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
     unsigned long startTime = millis();
-    for(int i = 0; i< 100000;i++){
+    for(unsigned long i = 0; i< 100000;i++){
       distance = getRange();
       String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
       myFile.print(dataBuf);
+      if(i%10000==0){
+        Serial.println(i);
+      }
     }
     unsigned long endTime = millis();
     myFile.println("END_SCAN");

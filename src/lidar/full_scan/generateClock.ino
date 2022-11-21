@@ -48,36 +48,38 @@ void elevationStep()
 
 ISR(TIMER1_COMPA_vect) // ISR for Timer 1
 {
+  cli();
   PINC |= (1<<step1); // Toggle PC1
   pulseCount++; // increment pulse count
     
   if (pulseCount >= maxPulses)
   {
     TCCR1B = 0; // Put timer in stop mode
+    //pulseCount=0;
   }
     
   TIFR1 |= (1<<OCF1A | 1<<OCF1B); // Clear IFG
   TCNT1 = 0; // reset counter to 0
-  if(dir1){
-    stepCount++;
-  }else{
-    stepCount--;
-  }
-  
+  stepCount++;
+  sei();
 }
 
 ISR(TIMER1_COMPB_vect) // ISR for Timer 0
 {
+  cli();
   PIND |= (1<<step2); // Toggle step 2
   pulseCount++; // increment pulse count
 
-  if (pulseCount >= maxPulses*10)
+  if (pulseCount >= maxPulses*4)
   {
     TCCR1B = 0; // Put timer in stop mode
     TIMSK1 = (1<<OCIE1A); // Enable elevation, disable sweep interrupts
+
+    //pulseCount=0;
   }
 
   TIFR1 |= (1<<OCF1A | 1<<OCF1B); // Clear IFG
   TCNT1 = 0; // Reset count
   stepCount2++;
+  sei();
 }

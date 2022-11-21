@@ -6,7 +6,7 @@ void encoderSetup()
   
   PCMSK0 |= ((1<<e1a) | (1<<e1b)); // Enable sweep a/b phase
   PCMSK1 |= (1<<e1z); // Enable sweep z phase
-  PCMSK2 |= (1<<e2a) | (1<<e2b) | (1<<e2z); // Enable elevation a/b phase
+//  PCMSK2 |= (1<<e2a) | (1<<e2b) | (1<<e2z); // Enable elevation a/b phase
   
   sei(); // Enable interrupts
 }
@@ -51,7 +51,12 @@ ISR(PCINT1_vect) // Port 1 ISR
       // Step elevation motor
       if (enc1 > 3900)
       {
-        elevationStep();
+        //elevationStep();
+        for(int j=0;j<20;j++){
+          PIND |= (1<<step2);
+          delay(2);
+        }
+        stepCount2+=20;
       }
 
       stepCount = 0; // Reset step count

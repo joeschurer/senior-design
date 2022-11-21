@@ -66,6 +66,10 @@ void loop(){
     uint8_t  c;
     newDistance = distanceFast(&distance);
 
+    newDistance = distanceFast(&distance);
+    String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
+    Serial.println(dataBuf);
+
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
     /*/unsigned long startTime = millis();
@@ -78,7 +82,7 @@ void loop(){
       }
     }*/
 
-    for(unsigned long i = 0; i< 100000;i++){
+    for(unsigned long i = 0; i< 300000;i++){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(distance)+ "," + String(distance) + "\n";
       myFile.print(dataBuf);
