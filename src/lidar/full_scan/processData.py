@@ -20,6 +20,7 @@ y_s = []
 z_s = []
 average_total_steps = 25600
 to_meters = 1/100
+offset = 0
 for row in reader:
     # Read in parameters
     dist = float(row[1])
@@ -33,14 +34,20 @@ for row in reader:
 
     # Calculate x, y, and z
     angle_sweep = (step_count/average_total_steps) * 360
-    angle_elevation = ((step_count2/average_total_steps) * 360) + 90
+    angle_elevation = ((step_count2/average_total_steps) * 360) + offset
 
     if direction == 0:
         angle_sweep = 360 - angle_sweep
     
-    x_s.append(dist * math.sin(math.radians(angle_elevation)) * math.cos(math.radians(angle_sweep)) * to_meters)
-    y_s.append(dist * math.cos(math.radians(angle_elevation)) * to_meters * -1)
-    z_s.append(dist * math.sin(math.radians(angle_sweep)) * math.sin(math.radians(angle_elevation)) * to_meters)
+    x = dist * math.sin(math.radians(angle_elevation)) * math.cos(math.radians(angle_sweep)) * to_meters
+    y = dist * math.cos(math.radians(angle_elevation)) * to_meters
+    z = dist * math.sin(math.radians(angle_sweep)) * math.sin(math.radians(angle_elevation)) * to_meters
+    # Potential filtering
+    # if x < 0.05 or y < 0.05 or z < 0.05:
+    #     continue
+    x_s.append(x)
+    y_s.append(y)
+    z_s.append(z)
 
 # Write x and y values to file
 f.close()
