@@ -100,13 +100,15 @@ void loop(){
       mode = Serial.read();
       Serial.println(mode);
     }
-    if(mode == '1' || mode == '2' || mode == '3'){
+    if(mode == '1' || mode == '2' || mode == '3'|| mode == '4'){
       waiting = false;
       if(mode == '1'){
         maxPulses = 50;
       }
-      if(mode == '2'){
+      else if(mode == '2'){
         //maxPulses = 7*2;
+        maxPulses = 2*5;
+      } else if(mode == '3'){
         maxPulses = 2*5;
       }
     }
@@ -132,12 +134,10 @@ void loop(){
       startClk();
       delay(2);
     }*/
-    //while(stepCount2 < 12800 && stepCount <30000){
-    while(stepCount2 < 12800){
+    while(stepCount2 < 12800 && stepCount <30000){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
-      Serial.println(dataBuf);
       myFile.println(dataBuf);
       sweepStep();
       if(mode == '1'){
@@ -162,8 +162,54 @@ void loop(){
     Serial.println("done");
     waiting = true;
     mode = '0';
+  } else if(mode == '3'){
+    delay(5000);
+    uint16_t distance;
+    uint8_t  newDistance = 0;
+    uint8_t  c;
+    newDistance = distanceFast(&distance);
+    String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      //Serial.println(TIMSK1);
+    Serial.println(dataBuf);
+
+    
+    myFile.println("BEGIN_SCAN");
+    Serial.println("BEGIN_SCAN");
+
+    while(dir1==1){
+      sweepStep();
+      delay(5);
+    }
+
+    //LOOP HERE
+    while(stepCount < 6400){
+      newDistance = distanceFast(&distance);
+      String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      //Serial.println(TIMSK1);
+      myFile.println(dataBuf);
+      sweepStep();
+    }
+
+
+    myFile.println("END_SCAN");
+    Serial.println("END_SCAN");
+    myFile.print(dir1);
+    myFile.print("\t");
+    myFile.print(enc1);
+    myFile.print("\t");
+    myFile.print(stepCount);
+    myFile.print("\t");
+    myFile.println(enc2);
+
+    myFile.close();
+
+    Serial.println("done");
+    waiting = true;
+    mode = '0';
+
+    
   }
-  else if(mode == '3'){
+  else if(mode == '4'){
     
     File dataFile = SD.open("test.txt");
     if (dataFile) {
