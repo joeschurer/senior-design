@@ -129,11 +129,10 @@ void loop(){
     Serial.println("BEGIN_SCAN");
     //int startTime = millis();
     
-    //dir 
-    /*while(dir1 ==1){
-      startClk();
-      delay(2);
-    }*/
+    while(dir1==1){
+      sweepStep();
+      delay(5);
+    }
     while(stepCount2 < 12800 && stepCount <30000){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
@@ -182,12 +181,22 @@ void loop(){
     }
 
     //LOOP HERE
-    while(stepCount < 6400){
+    while(stepCount2 < 6400){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
+      enc1+=maxPulses/2;
       sweepStep();
+      if(stepCount >= 6400){
+        dir1 = 1; // toggle dir1
+        PORTC |= (1<<d1); // Flip direction of sweep encoder
+        while(dir1==1){
+          sweepStep();
+          delay(5);
+         }
+      }
+      
     }
 
 

@@ -17,6 +17,8 @@ ports = []
 class Worker(QObject):
     finished = pyqtSignal()
     intReady = pyqtSignal(str)
+    fileDone = pyqtSignal()
+    fileData = pyqtSignal(str)
     disconnectError = pyqtSignal()
 
     @pyqtSlot()
@@ -26,13 +28,27 @@ class Worker(QObject):
         self.is_paused = False
 
     def work(self):
+        file_sending = False
         while self.working:
             while self.is_paused: #Provides the ability to pause the thread
                 time.sleep(0)
             try:
+
                 line = ser.readline().decode('utf-8')[:-2]
-                #print(line)
-                self.intReady.emit(line)
+                #detect file being sent
+                #prob sit in this loop until done....
+                if(line.find('file_begin') != -1):
+                    print("RX file")
+                    file_sending = True
+                    self.fileData.emit(line)
+
+                elif(line.find('file_end') != -1):
+                    print("File done")
+                    file_sending = False
+                    self.fileDone.emit()
+                elif(file_sending == False):
+                    self.intReady.emit(line)
+
             except:
                 print("Failed to read!")
                 self.is_paused = True
@@ -51,6 +67,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     thread = None
     worker = None
     loop_status = False
+    file_lines = []
     def __init__(self):
 
         ports = [
@@ -75,6 +92,16 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     def loop_finished(self):
         print("Loop done")
 
+    def onFileData(self,i):
+        self.file_lines.append(i)
+
+    def onFileDone(self):
+        #Prob skip lines 0 and n-1,n
+        with open('scan.txt', 'w') as f:
+            for line in self.file_lines:
+                f.write(line)
+        self.file_lines.clear()
+
     def onIntReady(self, i):
         self.textEdit.append("{}".format(i))
         self.port_label.setText(str(ser.port))
@@ -93,6 +120,9 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.worker.moveToThread(self.thread)
         self.thread.started.connect(self.worker.work)
         self.worker.intReady.connect(self.onIntReady)
+        self.worker.fileData.connect(self.onFileData)
+        self.worker.fileDone.connect(self.onFileDone)
+
         self.worker.disconnectError.connect(self.onDisconnectError)
         #self.stop_button.clicked.connect(self.worker.pause_thread)
         #self.start_button.clicked.connect(self.worker.unpause_thread)
@@ -107,10 +137,11 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     def on_save_button_clicked(self):
         with open('test.txt', 'w') as f:
             my_text = self.textEdit.toPlainText()
-            file_text = my_text[my_text.find("BEGIN_SCAN"):my_text.find("END_SCAN")] #Should grab only the file for Collin
-            file_text = file_text.split("BEGIN_SCAN\n")
-            print(file_text)
-            f.write(file_text[1])
+            #file_text = my_text[my_text.find("BEGIN_SCAN"):my_text.find("END_SCAN")] #Should grab only the file for Collin
+            #file_text = file_text.split("BEGIN_SCAN\n")
+            #print(file_text)
+            #f.write(file_text[1])
+            f.write(my_text)
 
     def on_stop_button_clicked(self):
         self.worker.pause_thread()
