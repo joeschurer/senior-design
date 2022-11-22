@@ -8,7 +8,7 @@ import pandas as pd
 # f.truncate()
 # f.close()
 
-read_file = pd.read_csv('../../../scans/bestet3dscan.txt')
+read_file = pd.read_csv('../../../scans/3dscan.txt')
 read_file.to_csv('3dscan.csv')
 #f = open('/Users/collinhough/Unity/Senior Design/Assets/test_csv.csv', 'w')
 f = open('3dscan.csv')
