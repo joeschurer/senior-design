@@ -11,7 +11,7 @@ LIDARLite_v3HP myLidarLite;
 File myFile;
 int config_val = 2; // Be accurate
 bool waiting = true;
-char mode = '1'; //1 = low res, 2 = high res, 3 = upload
+char mode = '0'; //1 = low res, 2 = high res, 3 = upload
 
 //From Adams code
 
@@ -32,7 +32,10 @@ bool dir2 = 1;
 bool edge = 0;
 
 // Determines number of pulses in one commanded step
-const uint8_t maxPulses = 2*10; // Sets number of pulses in a step
+volatile uint8_t maxPulses = 2*10;
+//2*10 is 1.2 million almost high
+//7*2 is 1.67 million over high
+//50 is low res so prob add delay
 uint8_t pulseCount = 0; // Iterator - do not change
 
 // Step, direction, encoder pins
@@ -57,7 +60,7 @@ const uint8_t d2 = 6;
 const uint8_t e2z = 7; // Elevation z phase
 
 void setup(){
-    Serial.begin(115200);
+    Serial.begin(230400);
 
     Wire.begin();
     #ifdef FAST_I2C
@@ -92,16 +95,20 @@ void loop(){
   while(waiting){
     delay(2000);
     Serial.println("Waiting for instruction");
-    while(Serial.available()){
-      char temp = Serial.read();
-      if(temp == '1' || temp == '2' || temp == '3'){
-      mode = temp;
-      }
+    //Serial.println(TIMSK1);
+    if(Serial.available()){
       mode = Serial.read();
       Serial.println(mode);
     }
     if(mode == '1' || mode == '2' || mode == '3'){
       waiting = false;
+      if(mode == '1'){
+        maxPulses = 50;
+      }
+      if(mode == '2'){
+        //maxPulses = 7*2;
+        maxPulses = 2*5;
+      }
     }
   }
 
@@ -111,6 +118,9 @@ void loop(){
     uint8_t  newDistance = 0;
     uint8_t  c;
     newDistance = distanceFast(&distance);
+    String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      //Serial.println(TIMSK1);
+    Serial.println(dataBuf);
 
     
     myFile.println("BEGIN_SCAN");
@@ -122,12 +132,19 @@ void loop(){
       startClk();
       delay(2);
     }*/
-    while(stepCount2 < 4800){
+    //while(stepCount2 < 12800 && stepCount <30000){
+    while(stepCount2 < 12800){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      //Serial.println(TIMSK1);
       Serial.println(dataBuf);
       myFile.println(dataBuf);
       sweepStep();
+      if(mode == '1'){
+        delay(5);
+      }
+      //delay(5);
+      //delay(5);
       //Serial.println("Loop two"); 
     }
     myFile.println("END_SCAN");
