@@ -17,9 +17,11 @@ ports = []
 class Worker(QObject):
     finished = pyqtSignal()
     intReady = pyqtSignal(str)
-    fileDone = pyqtSignal()
-    fileData = pyqtSignal(str)
+    fileDone = pyqtSignal(list)
+    fileData = pyqtSignal(list)
     disconnectError = pyqtSignal()
+
+
 
     @pyqtSlot()
     def __init__(self):
@@ -38,21 +40,32 @@ class Worker(QObject):
                 #detect file being sent
                 #prob sit in this loop until done....
                 if(line.find('file_begin') != -1):
-                    print("RX file")
-                    file_sending = True
-                    self.fileData.emit(line)
+                    file_contents = []
+                    print("reading file")
+                    #data_raw = ser.read_until('BEGIN_SCAN')
+                    #print(data_raw)
+                    line = ser.readline().decode('utf-8')[:-2] #throw out first line
+                    line = ser.readline().decode('utf-8')[:-2]
+                    line_num = 0
+                    while(line.find('END_SCAN') == -1):
+                        file_contents.append(line)
+                        line = ser.readline().decode('utf-8')[:-2]
+                        #print(line)
+                        line_num = line_num+1
+                        if(line_num % 10000==0):
+                            print("At line: " + str(line_num))
 
-                elif(line.find('file_end') != -1):
-                    print("File done")
-                    file_sending = False
-                    self.fileDone.emit()
-                elif(file_sending == False):
+                    print(file_contents)
+                    self.fileDone.emit(file_contents)
+                else:
                     self.intReady.emit(line)
 
-            except:
+            except Exception as e:
                 print("Failed to read!")
+                print(repr(e))
                 self.is_paused = True
                 self.disconnectError.emit()
+
 
 
         self.finished.emit()
@@ -95,10 +108,12 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
     def onFileData(self,i):
         self.file_lines.append(i)
 
-    def onFileDone(self):
+    def onFileDone(self,data):
         #Prob skip lines 0 and n-1,n
         with open('scan.txt', 'w') as f:
-            for line in self.file_lines:
+            #f.write(data)
+            for line in data:
+                line = line + '\n'#remove if not needed
                 f.write(line)
         self.file_lines.clear()
 
