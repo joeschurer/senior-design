@@ -35,7 +35,7 @@ class Worker(QObject):
             while self.is_paused: #Provides the ability to pause the thread
                 time.sleep(0)
             try:
-
+                #maybe decode after
                 line = ser.readline().decode('utf-8')[:-2]
                 #detect file being sent
                 #prob sit in this loop until done....
