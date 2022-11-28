@@ -45,17 +45,20 @@ class Worker(QObject):
                     #data_raw = ser.read_until('BEGIN_SCAN')
                     #print(data_raw)
                     line = ser.readline().decode('utf-8')[:-2] #throw out first line
-                    line = ser.readline().decode('utf-8')[:-2]
+                    line = ser.readline()
                     line_num = 0
-                    while(line.find('END_SCAN') == -1):
+                    while(line.count(b'E') != 1):
+                    #while(line.find('END_SCAN') == -1):
                         file_contents.append(line)
-                        line = ser.readline().decode('utf-8')[:-2]
+                        #line = ser.readline().decode('utf-8')[:-2]
+                        line = ser.readline()
                         #print(line)
                         line_num = line_num+1
                         if(line_num % 10000==0):
                             print("At line: " + str(line_num))
 
-                    print(file_contents)
+                    #print(file_contents)
+                    print("file read complete")
                     self.fileDone.emit(file_contents)
                 else:
                     self.intReady.emit(line)
@@ -96,7 +99,7 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         #if len(ports) >= 1:
             #warnings.warn('Connected....')
             #ser.port = ports[0]
-            #ser.baudrate = 230400
+            #ser.baudrate = 500000
             #self.port_label.setText(ports[0])
             #self.start_loop()
         self.show()
@@ -110,9 +113,11 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
 
     def onFileDone(self,data):
         #Prob skip lines 0 and n-1,n
+
+        new_data = [x.decode('utf-8')[:-2] for x in data]
         with open('scan.txt', 'w') as f:
             #f.write(data)
-            for line in data:
+            for line in new_data:
                 line = line + '\n'#remove if not needed
                 f.write(line)
         self.file_lines.clear()
@@ -191,7 +196,8 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         print(ports)
         if(ports):
             ser.port = ports[p]
-            ser.baudrate = 230400
+            #ser.baudrate = 500000
+            ser.baudrate = 1000000
             if(self.loop_status== False):
                 self.start_loop()
             else:

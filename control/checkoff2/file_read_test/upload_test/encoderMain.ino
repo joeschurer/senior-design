@@ -55,7 +55,6 @@ ISR(PCINT1_vect) // Port 1 ISR
         for(int j=0;j<20;j++){
           PIND |= (1<<step2);
           delay(2);
-          //Serial.println("test");
         }
         stepCount2+=20;
       }

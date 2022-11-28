@@ -60,7 +60,7 @@ const uint8_t d2 = 6;
 const uint8_t e2z = 7; // Elevation z phase
 
 void setup(){
-    Serial.begin(230400);
+    Serial.begin(1000000);
 
     Wire.begin();
     #ifdef FAST_I2C
@@ -102,13 +102,13 @@ void loop(){
     }
     if(mode == '1' || mode == '2' || mode == '3'|| mode == '4'){
       waiting = false;
-      if(mode == '1'){ //Low Res
-        maxPulses = 2*10;
+      if(mode == '1'){
+        maxPulses = 50;
       }
-      else if(mode == '2'){ //High Res
+      else if(mode == '2'){
         //maxPulses = 7*2;
         maxPulses = 2*5;
-      } else if(mode == '3'){//FOV
+      } else if(mode == '3'){
         maxPulses = 2*5;
       }
     }
@@ -140,7 +140,7 @@ void loop(){
       myFile.println(dataBuf);
       sweepStep();
       if(mode == '1'){
-        delay(2);
+        delay(5);
       }
       //delay(5);
       //delay(5);
@@ -220,7 +220,7 @@ void loop(){
   }
   else if(mode == '4'){
     
-    File dataFile = SD.open("test.txt");
+    File dataFile = SD.open("UPLOAD.TXT");
     if (dataFile) {
       Serial.println("file_begin");
       while (dataFile.available()) {
