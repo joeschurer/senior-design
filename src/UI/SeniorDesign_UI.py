@@ -42,7 +42,7 @@ class Worker(QObject):
                 if(line.find('file_begin') != -1):
                     file_contents = []
                     print("reading file")
-                    #data_raw = ser.read_until('BEGIN_SCAN')
+                    #data_raw = ser.read_until(b'E')
                     #print(data_raw)
                     line = ser.readline().decode('utf-8')[:-2] #throw out first line
                     line = ser.readline()

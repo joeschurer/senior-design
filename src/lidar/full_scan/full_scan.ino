@@ -86,7 +86,7 @@ void setup(){
     clkSetup(10,10);
 
      encoderSetup();
-
+     zeroElevation();
   
 }
 
@@ -121,6 +121,8 @@ void loop(){
     uint8_t  c;
     newDistance = distanceFast(&distance);
     String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+    newDistance = distanceFast(&distance);
+    dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
     Serial.println(dataBuf);
 
@@ -139,6 +141,7 @@ void loop(){
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
       sweepStep();
+      
       if(mode == '1'){
         delay(2);
       }
