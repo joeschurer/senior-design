@@ -19,6 +19,8 @@ class Worker(QObject):
     intReady = pyqtSignal(str)
     fileDone = pyqtSignal(list)
     fileData = pyqtSignal(list)
+    connected = pyqtSignal()
+    disconnected = pyqtSignal()
     disconnectError = pyqtSignal()
 
 
@@ -30,10 +32,11 @@ class Worker(QObject):
         self.is_paused = False
 
     def work(self):
-        file_sending = False
         while self.working:
             while self.is_paused: #Provides the ability to pause the thread
                 time.sleep(0)
+                #self.is_paused = False
+                print("paused")
             try:
                 #maybe decode after
                 line = ser.readline().decode('utf-8')[:-2]
@@ -63,11 +66,13 @@ class Worker(QObject):
                 else:
                     self.intReady.emit(line)
 
+
             except Exception as e:
                 print("Failed to read!")
                 print(repr(e))
                 self.is_paused = True
                 self.disconnectError.emit()
+
 
 
 
@@ -96,12 +101,12 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         ui_path = os.path.dirname(os.path.abspath(__file__))
         uic.loadUi(os.path.join(ui_path,'SeniorDesign_UI.ui'), self)
 
-        #if len(ports) >= 1:
-            #warnings.warn('Connected....')
-            #ser.port = ports[0]
-            #ser.baudrate = 500000
-            #self.port_label.setText(ports[0])
-            #self.start_loop()
+        if len(ports) >= 1:
+            warnings.warn('Connected....')
+            ser.port = ports[0]
+            ser.baudrate = 230400
+            self.port_label.setText(ports[0])
+            self.start_loop()
         self.show()
         self.initUI()
 

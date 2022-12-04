@@ -86,7 +86,7 @@ void setup(){
     clkSetup(10,10);
 
      encoderSetup();
-     zeroElevation();
+     //zeroElevation();
   
 }
 
@@ -104,12 +104,15 @@ void loop(){
       waiting = false;
       if(mode == '1'){ //Low Res
         maxPulses = 2*10;
+        zeroElevation();
       }
       else if(mode == '2'){ //High Res
         //maxPulses = 7*2;
-        maxPulses = 2*5;
+        maxPulses = 2*7;
+        zeroElevation();
       } else if(mode == '3'){//FOV
-        maxPulses = 2*5;
+        maxPulses = 2*7;
+        zeroElevation();
       }
     }
   }
