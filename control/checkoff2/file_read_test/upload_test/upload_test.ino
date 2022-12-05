@@ -60,7 +60,7 @@ const uint8_t d2 = 6;
 const uint8_t e2z = 7; // Elevation z phase
 
 void setup(){
-    Serial.begin(1000000);
+    Serial.begin(230400);
 
     Wire.begin();
     #ifdef FAST_I2C
@@ -222,12 +222,16 @@ void loop(){
     
     File dataFile = SD.open("UPLOAD.TXT");
     if (dataFile) {
+      const int chunkSize = 256;
+      uint8_t buffer[chunkSize];
       Serial.println("file_begin");
       while (dataFile.available()) {
-        Serial.write(dataFile.read());
+        int bytesRead = dataFile.read(buffer, chunkSize);
+        Serial.write(buffer, bytesRead);
       }
       dataFile.close();
       Serial.println("file_end");
+
     }  
     else {
       Serial.println("error opening datalog.txt");

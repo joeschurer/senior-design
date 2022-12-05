@@ -79,15 +79,13 @@ void setup(){
       while (1);
     }
 
-    SD.remove("test.txt");
-    myFile = SD.open("test.txt", FILE_WRITE);
+    
 
-    //Discard first distance
     clkSetup(10,10);
 
      encoderSetup();
      //zeroElevation();
-  
+    Serial.println("Setup Complete!");
 }
 
 void loop(){
@@ -108,16 +106,18 @@ void loop(){
       }
       else if(mode == '2'){ //High Res
         //maxPulses = 7*2;
-        maxPulses = 2*7;
+        maxPulses = 2*5;
         zeroElevation();
       } else if(mode == '3'){//FOV
-        maxPulses = 2*7;
+        maxPulses = 2*10;
         zeroElevation();
       }
     }
   }
 
   if(mode == '1'|| mode == '2'){
+    SD.remove("test.txt");
+    myFile = SD.open("test.txt", FILE_WRITE);
     delay(5000);
     uint16_t distance;
     uint8_t  newDistance = 0;
@@ -138,15 +138,26 @@ void loop(){
       sweepStep();
       delay(5);
     }
+    uint16_t prevSC,prevSC2;
+    bool prevDir;
+    prevSC = stepCount;
+    prevSC2 = stepCount2;
+    prevDir = dir1;
+    newDistance = distanceFast(&distance);
+    newDistance = distanceFast(&distance);
+    
     while(stepCount2 < 12800 && stepCount <30000){
+      String dataBuf = String(distance) + "," + String(prevSC)+ "," + String(prevSC2)+ "," + String(prevDir);
       newDistance = distanceFast(&distance);
-      String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      prevSC = stepCount;
+      prevSC2 = stepCount2;
+      prevDir = dir1;
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
       sweepStep();
       
       if(mode == '1'){
-        delay(2);
+        delay(3);
       }
       //delay(5);
       //delay(5);
@@ -168,6 +179,8 @@ void loop(){
     waiting = true;
     mode = '0';
   } else if(mode == '3'){
+    SD.remove("test.txt");
+    myFile = SD.open("test.txt", FILE_WRITE);
     delay(5000);
     uint16_t distance;
     uint8_t  newDistance = 0;
@@ -197,11 +210,8 @@ void loop(){
       if(stepCount >= 6400){
         dir1 = 1; // toggle dir1
         PORTC |= (1<<d1); // Flip direction of sweep encoder
-        while(dir1==1){
-          sweepStep();
-          delay(5);
-         }
       }
+      delay(3);
       
     }
 
