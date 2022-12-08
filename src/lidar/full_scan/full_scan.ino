@@ -9,6 +9,7 @@ LIDARLite_v3HP myLidarLite;
 
 //#define FAST_I2C
 File myFile;
+File testWrite;
 int config_val = 2; // Be accurate
 bool waiting = true;
 char mode = '0'; //1 = low res, 2 = high res, 3 = upload
@@ -85,6 +86,40 @@ void setup(){
 
      encoderSetup();
      //zeroElevation();
+    //test sd card
+    SD.remove("test.txt");
+    myFile = SD.open("test.txt",FILE_WRITE);
+    
+     if (myFile) {
+     
+    Serial.print("Writing to test.txt...");
+    myFile.println("testing 1, 2, 3.");
+    // close the file:
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+   // re-open the file for reading:
+  myFile = SD.open("test.txt");
+  if (myFile) {
+    Serial.println("test.txt:");
+
+    // read from the file until there's nothing else in it:
+    while (myFile.available()) {
+      Serial.write(myFile.read());
+    }
+    // close the file:
+    myFile.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+  SD.remove("test.txt");
+
+    
     Serial.println("Setup Complete!");
 }
 
@@ -131,8 +166,13 @@ void loop(){
 
     
     myFile.println("BEGIN_SCAN");
-    Serial.println("BEGIN_SCAN");
+    //Serial.println("BEGIN_SCAN");
     //int startTime = millis();
+    
+    //test read the sd card
+    while (myFile.available()) {
+    Serial.write(myFile.read());
+    }
     
     while(dir1==1){
       sweepStep();
@@ -154,7 +194,7 @@ void loop(){
       prevDir = dir1;
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
-      sweepStep();
+      swepStep();
       
       if(mode == '1'){
         delay(3);

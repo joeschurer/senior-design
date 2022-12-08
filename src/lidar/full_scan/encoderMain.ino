@@ -49,7 +49,7 @@ ISR(PCINT1_vect) // Port 1 ISR
       edge = 0; // Reset edge flag
 
       // Step elevation motor
-      if (enc1 > 3900)
+      if (stepCount > 24000)
       {
         if(stepCount2 < 1000 || stepCount2 > 11800){
             //elevationStep();
