@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QApplication, QComboBox, QDialog, QMainWindow, QWidg
     QListView
 from PyQt5.QtCore import QSize, QRect, QObject, pyqtSignal, QThread, pyqtSignal, pyqtSlot
 import time
+from datetime import datetime
 
 #be sure to pip install PyQt5 and pyserial
 
@@ -19,21 +20,23 @@ class Worker(QObject):
     intReady = pyqtSignal(str)
     fileDone = pyqtSignal(list)
     fileData = pyqtSignal(list)
+    connected = pyqtSignal()
+    disconnected = pyqtSignal()
     disconnectError = pyqtSignal()
-
+    connected = pyqtSlot()
 
 
     @pyqtSlot()
     def __init__(self):
         super(Worker, self).__init__()
         self.working = True
-        self.is_paused = False
+        self.is_paused = True
 
     def work(self):
-        file_sending = False
         while self.working:
             while self.is_paused: #Provides the ability to pause the thread
                 time.sleep(0)
+                #self.is_paused = False
             try:
                 #maybe decode after
                 line = ser.readline().decode('utf-8')[:-2]
@@ -63,6 +66,7 @@ class Worker(QObject):
                 else:
                     self.intReady.emit(line)
 
+
             except Exception as e:
                 print("Failed to read!")
                 print(repr(e))
@@ -71,7 +75,9 @@ class Worker(QObject):
 
 
 
+
         self.finished.emit()
+        print("finished")
 
     def pause_thread(self):
         self.is_paused = True
@@ -79,11 +85,14 @@ class Worker(QObject):
     def unpause_thread(self):
         self.is_paused = False
 
+
 class SeniorDesign_UI(QtWidgets.QMainWindow):
     thread = None
     worker = None
     loop_status = False
     file_lines = []
+    establish_connection = pyqtSignal()
+    lost_connection = pyqtSignal()
     def __init__(self):
 
         ports = [
@@ -95,13 +104,14 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         super(SeniorDesign_UI, self).__init__()
         ui_path = os.path.dirname(os.path.abspath(__file__))
         uic.loadUi(os.path.join(ui_path,'SeniorDesign_UI.ui'), self)
-
-        #if len(ports) >= 1:
-            #warnings.warn('Connected....')
-            #ser.port = ports[0]
-            #ser.baudrate = 500000
-            #self.port_label.setText(ports[0])
-            #self.start_loop()
+        '''
+        if len(ports) >= 1:
+            warnings.warn('Connected....')
+            ser.port = ports[0]
+            ser.baudrate = 230400
+            self.port_label.setText(ports[0])
+            self.start_loop()
+        '''
         self.show()
         self.initUI()
 
@@ -123,11 +133,14 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.file_lines.clear()
 
     def onIntReady(self, i):
-        self.textEdit.append("{}".format(i))
+        dt = datetime.now()
+        newline = str(dt) + ': ' + i
+        self.textEdit.append("{}".format(newline))
         self.port_label.setText(str(ser.port))
 
     def onDisconnectError(self):
         self.port_label.setText("Disconnected")
+        self.emit.lost_connection()
 
 
     def start_loop(self):
@@ -142,8 +155,10 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         self.worker.intReady.connect(self.onIntReady)
         self.worker.fileData.connect(self.onFileData)
         self.worker.fileDone.connect(self.onFileDone)
+        #self.worker.connected.connect(self.establish_connection)
 
-        self.worker.disconnectError.connect(self.onDisconnectError)
+        self.establish_connection.connect(self.worker.unpause_thread)
+        self.lost_connection.connect(self.worker.pause_thread)
         #self.stop_button.clicked.connect(self.worker.pause_thread)
         #self.start_button.clicked.connect(self.worker.unpause_thread)
         #self.connect_button.clicked.connect(self.reconnect)
@@ -197,15 +212,17 @@ class SeniorDesign_UI(QtWidgets.QMainWindow):
         if(ports):
             ser.port = ports[p]
             #ser.baudrate = 500000
-            ser.baudrate = 1000000
+            ser.baudrate = 230400
             if(self.loop_status== False):
                 self.start_loop()
             else:
                 self.worker.unpause_thread()
             print(ports[p])
             self.port_label.setText(ports[p])
+            self.establish_connection.emit()
         else:
             print("No ports identified. Skipping...")
+
 
     def upload(self):
         try:

@@ -31,10 +31,18 @@ void clkSetup(uint16_t SCD, uint16_t ECD) // Configure sweep step clock
 
 void sweepStep() // Starts step clock
 {
+  /*
   TCNT1 = 0;// Reset timer count
   pulseCount = 0;
   TIFR1 |= (1<<OCF1A | 1<<OCF1B); // Clear IFGs
   TCCR1B |= 0x01; // Put timer in start mode with 1 prescale
+  */
+  for(int j=0;j<maxPulses;j++){
+          PINC |= (1<<step1);
+          delayMicroseconds(10);
+          //Serial.println("test");
+       }
+  stepCount+=maxPulses;
 }
 
 void elevationStep()

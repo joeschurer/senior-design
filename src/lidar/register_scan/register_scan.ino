@@ -5,18 +5,16 @@
 
 String dataBuf;
 #define LIDARLITE_ADDR_DEFAULT 0x62
+File myFile;
+int config_val = 0;
+bool waiting = true;
+char mode = '0'; //1 = low res, 2 = high res, 3 = upload
+
 //Lidar settings (see library for reccomendations)
 uint8_t sigCountMax = 0x20;
 uint8_t acqConfigReg = 0x01;
 uint8_t refCountMax = 0x03;
 uint8_t thresholdBypass = 0x00;
-
-//#define FAST_I2C
-File myFile;
-bool waiting = true;
-char mode = '0'; //1 = low res, 2 = high res, 3 = upload
-
-//From Adams code
 
 // Define constants
 // Store encoder counts on sweep and elevation motors
@@ -63,35 +61,70 @@ const uint8_t d2 = 6;
 const uint8_t e2z = 7; // Elevation z phase
 
 void setup(){
-    Serial.begin(230400);
-
-    Wire.begin();
-    #ifdef FAST_I2C
-        #if ARDUINO >= 157
-            Wire.setClock(400000UL);
-        #else
-            TWBR = ((F_CPU / 400000UL) - 16) / 2;
-        #endif
-    #endif
-
-    if (!SD.begin(10)) {
-      Serial.println("initialization failed!");
-      while (1);
-    }
-
-    SD.remove("test.txt");
-    myFile = SD.open("test.txt", FILE_WRITE);
-
-    //Discard first distance
-    clkSetup(10,10);
-
-     encoderSetup();
-
   //Configure lidar
-    write(0x02, &sigCountMax    , 1);
-    write(0x04, &acqConfigReg   , 1);
-    write(0x12, &refCountMax    , 1);
-    write(0x1c, &thresholdBypass, 1);
+  write(0x02, &sigCountMax    , 1);
+  write(0x04, &acqConfigReg   , 1);
+  write(0x12, &refCountMax    , 1);
+  write(0x1c, &thresholdBypass, 1);
+    
+  Serial.begin(230400);
+
+  Wire.begin();
+  #ifdef FAST_I2C
+      #if ARDUINO >= 157
+          Wire.setClock(400000UL);
+      #else
+          TWBR = ((F_CPU / 400000UL) - 16) / 2;
+      #endif
+  #endif
+
+
+  if (!SD.begin(10)) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+
+    
+
+  clkSetup(10,10);
+
+  encoderSetup();
+     //zeroElevation();
+    //test sd card
+    SD.remove("test.txt");
+    myFile = SD.open("test.txt",FILE_WRITE);
+    
+     if (myFile) {
+     
+    Serial.print("Writing to test.txt...");
+    myFile.println("testing 1, 2, 3.");
+    // close the file:
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+
+   // re-open the file for reading:
+  myFile = SD.open("test.txt");
+  if (myFile) {
+    Serial.println("test.txt:");
+
+    // read from the file until there's nothing else in it:
+    while (myFile.available()) {
+      Serial.write(myFile.read());
+    }
+    // close the file:
+    myFile.close();
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+  SD.remove("test.txt");
+
+    
+    Serial.println("Setup Complete!");
 }
 
 void loop(){
@@ -106,43 +139,77 @@ void loop(){
     }
     if(mode == '1' || mode == '2' || mode == '3'|| mode == '4'){
       waiting = false;
-      if(mode == '1'){
-        maxPulses = 50;
+      if(mode == '1'){ //Low Res
+        maxPulses = 2*10;
+        zeroElevation();
       }
-      else if(mode == '2'){
+      else if(mode == '2'){ //High Res
         //maxPulses = 7*2;
         maxPulses = 2*5;
-      } else if(mode == '3'){
-        maxPulses = 2*5;
+        zeroElevation();
+      } else if(mode == '3'){//FOV
+        maxPulses = 2*10;
+        zeroElevation();
       }
     }
   }
 
   if(mode == '1'|| mode == '2'){
+    SD.remove("test.txt");
+    myFile = SD.open("test.txt", FILE_WRITE);
     delay(5000);
     uint16_t distance;
     distance = getRange();
     String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+    distance = getRange();
+    dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
     Serial.println(dataBuf);
 
     
     myFile.println("BEGIN_SCAN");
-    Serial.println("BEGIN_SCAN");
+    //Serial.println("BEGIN_SCAN");
     //int startTime = millis();
     
+    //test read the sd card
+    while (myFile.available()) {
+    Serial.write(myFile.read());
+    }
+    
     while(dir1==1){
-      sweepStep();
+      for(int j=0;j<maxPulses;j++){
+          PINC |= (1<<step1);
+          delayMicroseconds(10);
+          //Serial.println("test");
+       }
+       stepCount+=maxPulses;
       delay(5);
     }
+    uint16_t prevSC,prevSC2;
+    bool prevDir;
+    prevSC = stepCount;
+    prevSC2 = stepCount2;
+    prevDir = dir1;
+    distance = getRange();
+    distance = getRange();
+    
     while(stepCount2 < 12800 && stepCount <30000){
+      String dataBuf = String(distance) + "," + String(prevSC)+ "," + String(prevSC2)+ "," + String(prevDir);
       distance = getRange();
-      String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      prevSC = stepCount;
+      prevSC2 = stepCount2;
+      prevDir = dir1;
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
-      sweepStep();
+      for(int j=0;j<maxPulses;j++){
+          PINC |= (1<<step1);
+          delayMicroseconds(10);
+          //Serial.println("test");
+       }
+       stepCount+=maxPulses;
+      
       if(mode == '1'){
-        delay(5);
+        delay(3);
       }
       //delay(5);
       //delay(5);
@@ -164,6 +231,8 @@ void loop(){
     waiting = true;
     mode = '0';
   } else if(mode == '3'){
+    SD.remove("test.txt");
+    myFile = SD.open("test.txt", FILE_WRITE);
     delay(5000);
     uint16_t distance;
     distance = getRange();
@@ -176,7 +245,12 @@ void loop(){
     Serial.println("BEGIN_SCAN");
 
     while(dir1==1){
-      sweepStep();
+      for(int j=0;j<maxPulses;j++){
+          PINC |= (1<<step1);
+          delayMicroseconds(10);
+          //Serial.println("test");
+       }
+       stepCount+=maxPulses;
       delay(5);
     }
 
@@ -187,15 +261,17 @@ void loop(){
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
       enc1+=maxPulses/2;
-      sweepStep();
+      for(int j=0;j<maxPulses;j++){
+          PINC |= (1<<step1);
+          delayMicroseconds(10);
+          //Serial.println("test");
+       }
+       stepCount+=maxPulses;
       if(stepCount >= 6400){
         dir1 = 1; // toggle dir1
         PORTC |= (1<<d1); // Flip direction of sweep encoder
-        while(dir1==1){
-          sweepStep();
-          delay(5);
-         }
       }
+      delay(3);
       
     }
 
@@ -244,6 +320,9 @@ void loop(){
     
  
 }
+
+
+
 //Get distance (this version waits for measurement to be done to return)
 uint16_t getRange(){
   uint8_t  busyFlag;

@@ -49,14 +49,25 @@ ISR(PCINT1_vect) // Port 1 ISR
       edge = 0; // Reset edge flag
 
       // Step elevation motor
-      if (enc1 > 3900)
+      if (stepCount > 24000)
       {
+        if(stepCount2 < 1000 || stepCount2 > 11800){
+            //elevationStep();
+          for(int j=0;j<maxPulses;j++){
+            PIND |= (1<<step2);
+            delay(2);
+            //Serial.println("test");
+          }
+          stepCount2+=maxPulses;
+        }
+        
         //elevationStep();
-        for(int j=0;j<20;j++){
+        for(int j=0;j<maxPulses;j++){
           PIND |= (1<<step2);
           delay(2);
+          //Serial.println("test");
         }
-        stepCount2+=20;
+        stepCount2+=maxPulses;
       }
 
       stepCount = 0; // Reset step count

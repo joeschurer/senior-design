@@ -5,7 +5,7 @@ void zeroElevation()
 
   // Mask elevation a/b phases, enable elevation z phase
 
-  Serial.println(PCMSK2);
+ // Serial.println(PCMSK2);
 
   PCMSK2 &= ~(1<<e2a | 1<<e2b);
 
@@ -13,7 +13,7 @@ void zeroElevation()
 
  
 
-  Serial.println(PCMSK2);
+  //Serial.println(PCMSK2);
 
   // Set elevation direction to down
 
@@ -88,5 +88,7 @@ void zeroElevation()
   // Pull step 2 low if not done already
 
   PORTD &= ~(1<<step2);
+
+  PCMSK2 &= ~(1<<e2z);
 
 }
