@@ -48,7 +48,7 @@ void zeroElevation()
   // Set to 5600 for 135 degree start
 
   // Set to 2400 for 90 degree start
-  const uint16_t elevationOffset = 8800;
+  const uint16_t elevationOffset = 5600;
  
   if(mode == '3'){
     const uint16_t elevationOffset = 5600;
@@ -90,5 +90,7 @@ void zeroElevation()
   PORTD &= ~(1<<step2);
 
   PCMSK2 &= ~(1<<e2z);
+
+  
 
 }

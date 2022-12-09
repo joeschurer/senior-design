@@ -39,10 +39,10 @@ void sweepStep() // Starts step clock
   */
   for(int j=0;j<maxPulses;j++){
           PINC |= (1<<step1);
-          delayMicroseconds(10);
+          delayMicroseconds(100);
           //Serial.println("test");
        }
-       stepCount+=maxPulses;
+  stepCount+=maxPulses;
 }
 
 void elevationStep()

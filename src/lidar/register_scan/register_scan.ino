@@ -89,39 +89,14 @@ void setup(){
   clkSetup(10,10);
 
   encoderSetup();
+
+  DDRB |= (1<<e1a | 1<<e1b); // Enable e1a/e1b as output
+  PORTB |= (1<<e1a | 1<<e1b); // Set e1a/e1b output to 1
+  DDRD |= (1<<e2a | 1<<e2b); // Enable e2a/e2b as output
+  PORTD |= (1<<e2a | 1<<e2b); // Set e2a/e2b output to 1
      //zeroElevation();
     //test sd card
-    SD.remove("test.txt");
-    myFile = SD.open("test.txt",FILE_WRITE);
     
-     if (myFile) {
-     
-    Serial.print("Writing to test.txt...");
-    myFile.println("testing 1, 2, 3.");
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
-
-   // re-open the file for reading:
-  myFile = SD.open("test.txt");
-  if (myFile) {
-    Serial.println("test.txt:");
-
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) {
-      Serial.write(myFile.read());
-    }
-    // close the file:
-    myFile.close();
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
-  SD.remove("test.txt");
 
     
     Serial.println("Setup Complete!");
@@ -138,6 +113,43 @@ void loop(){
       Serial.println(mode);
     }
     if(mode == '1' || mode == '2' || mode == '3'|| mode == '4'){
+
+      if(mode == '1' || mode == '2' | mode == '3'){
+        SD.remove("write.txt");
+        myFile = SD.open("write.txt",FILE_WRITE);
+        
+         if (myFile) {
+         
+        Serial.print("Writing to write.txt...");
+        myFile.println("testing 1, 2, 3.");
+        // close the file:
+        myFile.close();
+        Serial.println("done.");
+      } else {
+        // if the file didn't open, print an error:
+        Serial.println("error opening write.txt");
+      }
+    
+       // re-open the file for reading:
+        myFile = SD.open("write.txt");
+        if (myFile) {
+          Serial.println("write.txt:");
+      
+          // read from the file until there's nothing else in it:
+          while (myFile.available()) {
+            Serial.write(myFile.read());
+          }
+          // close the file:
+          myFile.close();
+        } else {
+          // if the file didn't open, print an error:
+          Serial.println("error opening write.txt");
+        }
+        //SD.remove("write.txt");
+    
+        Serial.println("SD test done");
+      }
+      
       waiting = false;
       if(mode == '1'){ //Low Res
         maxPulses = 2*10;
@@ -145,7 +157,7 @@ void loop(){
       }
       else if(mode == '2'){ //High Res
         //maxPulses = 7*2;
-        maxPulses = 2*5;
+        maxPulses = 2*7;
         zeroElevation();
       } else if(mode == '3'){//FOV
         maxPulses = 2*10;
@@ -201,6 +213,7 @@ void loop(){
       prevDir = dir1;
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
+      myFile.flush();
       for(int j=0;j<maxPulses;j++){
           PINC |= (1<<step1);
           delayMicroseconds(10);
@@ -243,7 +256,7 @@ void loop(){
     
     myFile.println("BEGIN_SCAN");
     Serial.println("BEGIN_SCAN");
-
+    myFile.flush();
     while(dir1==1){
       for(int j=0;j<maxPulses;j++){
           PINC |= (1<<step1);
@@ -344,6 +357,7 @@ uint16_t getRange(){
   while(busyFlag){
     read(0x01, &busyFlag, 1);
     busyFlag &= 0x01;
+    Serial.println("busy");
   }
 
   //now retrieve the distance

@@ -4,9 +4,9 @@ void encoderSetup()
   
   PCICR |= (0b00000111); // Turn on port b, c, d interrupts
   
-  PCMSK0 |= ((1<<e1a) | (1<<e1b)); // Enable sweep a/b phase
+  //PCMSK0 |= ((1<<e1a) | (1<<e1b)); // Enable sweep a/b phase
   PCMSK1 |= (1<<e1z); // Enable sweep z phase
-//  PCMSK2 |= (1<<e2a) | (1<<e2b) | (1<<e2z); // Enable elevation a/b phase
+ PCMSK2 |=  (1<<e2z); // Enable elevation a/b phase
   
   sei(); // Enable interrupts
 }
@@ -28,6 +28,7 @@ ISR(PCINT1_vect) // Port 1 ISR
   {
     if (stepCount > 1000) // Don't trigger again immediately
     {
+      delay(50);
       dir1 ^= 1; // toggle dir1
       PORTC ^= (1<<d1); // Flip direction of sweep encoder
 

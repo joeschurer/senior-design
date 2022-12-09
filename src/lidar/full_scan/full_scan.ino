@@ -84,42 +84,18 @@ void setup(){
 
     clkSetup(10,10);
 
-     encoderSetup();
-     //zeroElevation();
-    //test sd card
-    SD.remove("test.txt");
-    myFile = SD.open("test.txt",FILE_WRITE);
-    
-     if (myFile) {
+    encoderSetup();
+
+    DDRB |= (1<<e1a | 1<<e1b); // Enable e1a/e1b as output
+  PORTB |= (1<<e1a | 1<<e1b); // Set e1a/e1b output to 1
+  DDRD |= (1<<e2a | 1<<e2b); // Enable e2a/e2b as output
+  PORTD |= (1<<e2a | 1<<e2b); // Set e2a/e2b output to 1
      
-    Serial.print("Writing to test.txt...");
-    myFile.println("testing 1, 2, 3.");
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
-
-   // re-open the file for reading:
-  myFile = SD.open("test.txt");
-  if (myFile) {
-    Serial.println("test.txt:");
-
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) {
-      Serial.write(myFile.read());
-    }
-    // close the file:
-    myFile.close();
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening test.txt");
-  }
-  SD.remove("test.txt");
+   //zeroElevation();
+    //test sd card
 
     
+      
     Serial.println("Setup Complete!");
 }
 
@@ -134,6 +110,56 @@ void loop(){
       Serial.println(mode);
     }
     if(mode == '1' || mode == '2' || mode == '3'|| mode == '4'){
+      //TEST SD CARD
+      if(mode == '1' || mode == '2' | mode == '3'){
+        SD.remove("write.txt");
+        myFile = SD.open("write.txt",FILE_WRITE);
+        
+         if (myFile) {
+         
+        Serial.print("Writing to write.txt...");
+        myFile.println("testing 1, 2, 3.");
+        // close the file:
+        myFile.close();
+        Serial.println("done.");
+      } else {
+        // if the file didn't open, print an error:
+        Serial.println("error opening write.txt");
+      }
+    
+       // re-open the file for reading:
+        myFile = SD.open("write.txt");
+        if (myFile) {
+          Serial.println("write.txt:");
+      
+          // read from the file until there's nothing else in it:
+          while (myFile.available()) {
+            Serial.write(myFile.read());
+          }
+          // close the file:
+          myFile.close();
+        } else {
+          // if the file didn't open, print an error:
+          Serial.println("error opening write.txt");
+        }
+        //SD.remove("write.txt");
+    
+        Serial.println("SD test done");
+      }
+
+    uint16_t distance;
+    uint8_t  newDistance = 0;
+      
+      Serial.println("Lidar Test Start");
+      for(int i=0;i<1000;i++){
+        
+       newDistance = distanceFast(&distance);
+       dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
+      //Serial.println(TIMSK1);
+       Serial.println(dataBuf);
+       }
+       Serial.println("Lidar test done");
+      
       waiting = false;
       if(mode == '1'){ //Low Res
         maxPulses = 2*10;
@@ -141,7 +167,7 @@ void loop(){
       }
       else if(mode == '2'){ //High Res
         //maxPulses = 7*2;
-        maxPulses = 2*5;
+        maxPulses = 2*7;
         zeroElevation();
       } else if(mode == '3'){//FOV
         maxPulses = 2*10;
@@ -163,7 +189,6 @@ void loop(){
     dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
     Serial.println(dataBuf);
-
     
     myFile.println("BEGIN_SCAN");
     //Serial.println("BEGIN_SCAN");
@@ -171,7 +196,7 @@ void loop(){
     
     //test read the sd card
     while (myFile.available()) {
-    Serial.write(myFile.read());
+      Serial.write(myFile.read());
     }
     
     while(dir1==1){
@@ -185,6 +210,8 @@ void loop(){
     prevDir = dir1;
     newDistance = distanceFast(&distance);
     newDistance = distanceFast(&distance);
+
+    unsigned long flushCount = 0;
     
     while(stepCount2 < 12800 && stepCount <30000){
       String dataBuf = String(distance) + "," + String(prevSC)+ "," + String(prevSC2)+ "," + String(prevDir);
@@ -192,16 +219,20 @@ void loop(){
       prevSC = stepCount;
       prevSC2 = stepCount2;
       prevDir = dir1;
-      //Serial.println(TIMSK1);
       myFile.println(dataBuf);
-      swepStep();
-      
+      //myFile.flush();
+      sweepStep();
       if(mode == '1'){
         delay(3);
       }
-      //delay(5);
-      //delay(5);
-      //Serial.println("Loop two"); 
+
+      flushCount++;
+      if(flushCount > 200000){
+        myFile.flush();
+        flushCount=0;
+      }
+
+
     }
     myFile.println("END_SCAN");
     Serial.println("END_SCAN");
@@ -214,6 +245,7 @@ void loop(){
     myFile.println(enc2);
 
     myFile.close();
+    
 
     Serial.println("done");
     waiting = true;
@@ -239,19 +271,52 @@ void loop(){
       delay(5);
     }
 
+    unsigned long flushCount = 0;
+
     //LOOP HERE
-    while(stepCount2 < 6400){
+    while(stepCount2 < 6400 && stepCount <8000){
       newDistance = distanceFast(&distance);
       String dataBuf = String(distance) + "," + String(stepCount)+ "," + String(stepCount2)+ "," + String(dir1);
       //Serial.println(TIMSK1);
       myFile.println(dataBuf);
-      enc1+=maxPulses/2;
       sweepStep();
-      if(stepCount >= 6400){
+      //myFile.flush();
+      if(stepCount >= 6400 && ~dir1){
+        
+        
         dir1 = 1; // toggle dir1
         PORTC |= (1<<d1); // Flip direction of sweep encoder
+
+        Serial.print(dir1);
+        Serial.print("\t");
+        Serial.print(enc1);
+        Serial.print("\t");
+        Serial.print(stepCount);
+        Serial.print("\t");
+        Serial.print(enc2);
+        Serial.print("\t");
+        Serial.println(stepCount2);
+        stepCount = 0;
+
+        
+        for(int j=0;j<maxPulses;j++){
+          PIND |= (1<<step2);
+          delay(2);
+          //Serial.println("test");
+        }
+        stepCount2+=maxPulses;
+
+        
+        
       }
-      delay(3);
+      delay(1);
+      //delay(3);
+      /*
+      flushCount++;
+      if(flushCount > 200000){
+        myFile.flush();
+        flushCount=0;
+      }*/
       
     }
 
